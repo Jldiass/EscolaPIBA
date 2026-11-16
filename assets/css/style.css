@@ -1,0 +1,302 @@
+/* =============================================================
+   Música PIBA - Estilo visual
+   Tema escuro com menu lateral (mesma linha visual dos sistemas
+   do Joao), com toques de música: dourado de instrumento de metal,
+   linhas de pauta e notas musicais.
+   ============================================================= */
+
+/* Variáveis de cor: mudando aqui, muda o sistema inteiro */
+:root {
+    --fundo: #0a0f1a;
+    --menu: #0e1626;
+    --cartao: #121c2e;
+    --cartao-2: #18243a;
+    --hover: #1f2e48;
+    --borda: #24344f;
+
+    --titulo: #f3f5f9;
+    --texto: #d3d8e2;
+    --suave: #93a0b8;
+
+    --dourado: #e8b54a;      /* cor principal: metais (trompete, sax) */
+    --dourado-forte: #f6c869;
+    --vinho: #b2445c;        /* cor de destaque: madeira de violino */
+    --verde: #3fbf7f;
+    --vermelho: #ef5a5a;
+
+    --raio: 14px;
+    --fonte: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: var(--fonte);
+    font-size: 15px;
+}
+
+h1, h2, h3 { color: var(--titulo); margin: 0; }
+a { color: var(--dourado); text-decoration: none; }
+a:hover { color: var(--dourado-forte); }
+
+/* ---------- Estrutura: menu lateral + conteúdo ---------- */
+.app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: var(--menu);
+    border-right: 1px solid var(--borda);
+    padding: 22px 14px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px;
+    color: var(--titulo);
+    font-size: 20px;
+    letter-spacing: 0.04em;
+}
+.marca img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--dourado);
+    background: #000;
+}
+.marca b { color: var(--dourado); margin-left: 4px; }
+
+.subtitulo {
+    margin: 6px 8px 26px 66px;
+    color: var(--suave);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+nav { display: flex; flex-direction: column; gap: 4px; }
+
+.aba {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: var(--suave);
+    transition: background 0.15s, color 0.15s;
+}
+.aba i {
+    font-style: normal;
+    width: 22px;
+    text-align: center;
+    font-size: 17px;
+}
+.aba:hover { background: rgba(255, 255, 255, 0.05); color: var(--titulo); }
+.aba-ativa,
+.aba-ativa:hover {
+    background: var(--dourado);
+    color: #1a1204;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--dourado-forte);
+}
+.aba-em-breve { opacity: 0.45; cursor: default; }
+.aba-em-breve:hover { background: none; color: var(--suave); }
+.aba small { margin-left: auto; font-size: 10px; text-transform: uppercase; }
+
+/* Pauta musical decorativa no fim do menu */
+.pauta {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 0 8px 14px;
+    opacity: 0.25;
+    position: relative;
+}
+.pauta span { height: 1px; background: var(--dourado); }
+.pauta::after {
+    content: "𝄞  ♩ ♪ ♫ ♬";
+    position: absolute;
+    left: 10px;
+    top: -14px;
+    font-size: 34px;
+    color: var(--dourado);
+    letter-spacing: 6px;
+    white-space: nowrap;
+}
+.rodape-menu { color: var(--suave); font-size: 11px; padding: 0 8px; margin: 0; }
+
+.conteudo { padding: 32px 40px; max-width: 1200px; width: 100%; }
+
+/* ---------- Cabeçalho das páginas ---------- */
+.topo {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 26px;
+    flex-wrap: wrap;
+}
+.topo h1 { font-size: 26px; }
+.topo p { margin: 6px 0 0; color: var(--suave); }
+
+/* Faixa de boas-vindas com notas musicais ao fundo */
+.banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--raio);
+    padding: 30px 32px;
+    margin-bottom: 26px;
+    background:
+        repeating-linear-gradient(to bottom, transparent 0 17px, rgba(232, 181, 74, 0.12) 17px 18px),
+        linear-gradient(120deg, #1b2440, #2a1c2c 60%, #3a1d27);
+    border: 1px solid var(--borda);
+}
+.banner::after {
+    content: "♪ ♫ 𝄞 ♬";
+    position: absolute;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 64px;
+    color: var(--dourado);
+    opacity: 0.25;
+    letter-spacing: 10px;
+}
+.banner h1 { font-size: 28px; }
+.banner p { color: var(--texto); margin: 8px 0 0; max-width: 560px; }
+
+/* ---------- Cartões ---------- */
+.cartao {
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 26px;
+}
+.indicador { position: relative; overflow: hidden; }
+.indicador .rotulo { color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+.indicador .valor { font-size: 34px; font-weight: 700; color: var(--titulo); margin-top: 6px; }
+.indicador .icone {
+    position: absolute;
+    right: 16px;
+    top: 12px;
+    font-size: 40px;
+    color: var(--dourado);
+    opacity: 0.3;
+}
+
+/* ---------- Tabelas ---------- */
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th {
+    text-align: left;
+    color: var(--suave);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--borda);
+}
+.tabela td { padding: 12px; border-bottom: 1px solid rgba(36, 52, 79, 0.6); }
+.tabela tbody tr:hover { background: var(--hover); }
+.tabela tbody tr:last-child td { border-bottom: 0; }
+.acoes { display: flex; gap: 8px; justify-content: flex-end; }
+.acoes form { margin: 0; }
+
+.selo {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.selo-ativo { background: rgba(63, 191, 127, 0.15); color: var(--verde); }
+.selo-inativo { background: rgba(147, 160, 184, 0.15); color: var(--suave); }
+.selo-instrumento { background: rgba(232, 181, 74, 0.14); color: var(--dourado-forte); }
+
+.vazio { text-align: center; color: var(--suave); padding: 40px 0; }
+
+/* ---------- Botões ---------- */
+.botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--borda);
+    background: var(--cartao-2);
+    color: var(--texto);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.botao:hover { border-color: var(--dourado); color: var(--titulo); }
+.botao-primario { background: var(--dourado); border-color: var(--dourado); color: #1a1204; font-weight: 600; }
+.botao-primario:hover { background: var(--dourado-forte); color: #1a1204; }
+.botao-perigo:hover { border-color: var(--vermelho); color: var(--vermelho); }
+.botao-pequeno { padding: 6px 12px; font-size: 13px; }
+
+/* ---------- Formulários ---------- */
+.formulario { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo-inteiro { grid-column: 1 / -1; }
+.campo label { font-size: 13px; color: var(--suave); }
+.campo input,
+.campo select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--borda);
+    background: var(--cartao-2);
+    color: var(--titulo);
+    font: inherit;
+}
+.campo input:focus,
+.campo select:focus { outline: none; border-color: var(--dourado); box-shadow: 0 0 0 3px rgba(232, 181, 74, 0.2); }
+.botoes-form { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+.alerta { padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; }
+.alerta-sucesso { background: rgba(63, 191, 127, 0.12); color: var(--verde); border: 1px solid rgba(63, 191, 127, 0.3); }
+.alerta-erro { background: rgba(239, 90, 90, 0.12); color: var(--vermelho); border: 1px solid rgba(239, 90, 90, 0.3); }
+
+.busca { display: flex; gap: 10px; margin-bottom: 16px; }
+.busca input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--borda);
+    background: var(--cartao-2);
+    color: var(--titulo);
+    font: inherit;
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .pauta, .rodape-menu { display: none; }
+    .conteudo { padding: 20px 16px; }
+    .formulario { grid-template-columns: 1fr; }
+    .banner::after { display: none; }
+    .tabela .ocultar-celular { display: none; }
+}

@@ -1,0 +1,2 @@
+# O banco SQLite é gerado automaticamente na primeira execução
+database/*.sqlite
