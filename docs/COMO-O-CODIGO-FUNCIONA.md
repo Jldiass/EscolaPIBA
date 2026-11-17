@@ -16,9 +16,8 @@ Ao clicar em **Salvar**, o formulário é enviado por **POST** para a mesma pág
 
 ```
 EscolaPIBA/
-├── index.php                 Painel inicial (muda conforme o perfil)
+├── index.php                 Painel inicial: um para o admin, outro para o professor
 ├── login.php / logout.php    Entrar e sair
-├── conta.php                 Trocar a própria senha
 ├── agenda.php                Calendário semanal
 ├── alunos/
 │   ├── index.php             Lista + busca + filtro por especialidade
@@ -33,6 +32,7 @@ EscolaPIBA/
 │   ├── index.php             Chamada do dia (professor marca; admin só consulta)
 │   └── frequencia.php        Relatório de frequência
 ├── financeiro/index.php      Repasses do mês e percentual da escola
+├── mensalidades/index.php    Professor informa quem pagou; admin só consulta
 ├── avisos/
 │   ├── index.php             Lembretes, próximos eventos e histórico (admin exclui)
 │   └── form.php              Cadastrar / editar aviso (só admin)
@@ -80,6 +80,9 @@ A tabela mais importante é **`matriculas`**: ela liga **aluno + professor + esp
 | `aulasDoDia($dia, $professorId)` | Matrículas ativas de um dia da semana | Painel, agenda, chamada |
 | `resumoFinanceiro($mes)` | Por professor: alunos, total, parte da escola, parte do professor e se já repassou | Painel, financeiro |
 | `relatorioFrequencia($prof, $inicio, $fim)` | Por matrícula: aulas, presenças, faltas e % | Painel do professor, frequência |
+| `proximasAulas($prof, $limite)` | As próximas aulas dos próximos 7 dias, com a data | Painéis |
+| `alunosInadimplentes($prof)` | Alunos marcados como "não pagou", com os meses e o total | Painéis |
+| `repassesPendentes()` | Professores sem repasse no mês passado e no atual | Painel do admin |
 
 O cálculo do financeiro, passo a passo:
 
@@ -135,7 +138,7 @@ Feita com **Three.js**: uma *cena*, uma *câmera* e um *renderizador* desenham o
 1. **Fácil:** mude o percentual padrão da escola em `sql/dados_ficticios.php` e veja o financeiro mudar (apague `database/escola.sqlite` antes de testar).
 2. **Fácil:** acrescente "Canto" à lista `$instrumentos` em `alunos/form.php`.
 3. **Médio:** em `chamada/frequencia.php`, troque a constante `FREQUENCIA_MINIMA` para 80 e explique o efeito.
-4. **Médio:** no painel do professor (`index.php`), mostre um quarto cartão com quanto ele vai receber no mês. Dica: use `resumoFinanceiro(date('Y-m'))` e procure a linha com o `id` dele.
+4. **Médio:** no painel do professor (`index.php`), mostre mais um cartão com quanto ele vai receber no mês. Dica: use `resumoFinanceiro(date('Y-m'))` e procure a linha com o `id` dele.
 5. **Desafio:** em `assets/js/nota3d.js`, troque as cores da nota ou acrescente uma segunda nota girando ao lado.
 
 Depois de cada mudança:

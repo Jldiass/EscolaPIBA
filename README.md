@@ -7,7 +7,9 @@ Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **a
 - 🗓 **Agenda semanal:** cada professor vê as aulas da semana dele; o admin vê a de todos
 - ✓ **Chamada:** o professor marca presença ou falta em cada aula; o admin só consulta (presentes, faltas e chamadas não feitas)
 - 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
+- 💳 **Mensalidades:** o professor informa, mês a mês, quais alunos pagaram e quais não pagaram
 - 💰 **Financeiro:** quanto cada professor recebe pelos seus alunos e **quem já repassou** a parte da escola no mês
+- 🏠 **Um painel para cada perfil:** o admin vê as próximas aulas de todos, avisos, alunos que não pagaram e professores sem repasse; o professor vê as aulas dele, avisos, mensalidades em aberto e alunos com frequência baixa
 - 📣 **Avisos:** o administrador publica eventos sociais, eventos internos e lembretes (ex.: "não usar a sala 101"); todos veem e o painel mostra os próximos
 
 Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e Difusão Cultural**, curso de Ciência da Computação (Anhanguera).
@@ -35,11 +37,11 @@ Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com d
 | Login | Perfil | O que vê |
 |---|---|---|
 | **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, publica avisos, acompanha as chamadas e a frequência (só consulta) e cuida do financeiro |
-| `thiago` | Professor de Violino | Só os alunos e a agenda dele |
+| `thiago` | Professor de Violino | Só os alunos, a agenda, a chamada e as mensalidades dele |
 | `geovana` | Professora de Viola | Só os alunos e a agenda dela |
 | `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |
 
-> ⚠️ Antes de usar de verdade na escola: apague o arquivo `database/escola.sqlite` de demonstração, entre como `admin` e troque a senha no botão 🔑 (canto inferior esquerdo). As senhas dos professores são trocadas em **Professores → Editar**, ou por eles mesmos no 🔑.
+> ⚠️ Antes de usar de verdade na escola: apague o arquivo `database/escola.sqlite` de demonstração, entre como `admin` e troque a senha em **Professores → Administradores → Editar**. As senhas dos professores também são definidas e trocadas pelo admin, em **Professores → Editar**.
 
 ## Tecnologias
 

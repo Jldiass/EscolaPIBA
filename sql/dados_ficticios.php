@@ -51,12 +51,14 @@ function inserirDadosFicticios(PDO $pdo): void
         'INSERT INTO matriculas (aluno_id, professor_id, instrumento, dia_semana, hora_inicio, hora_fim, mensalidade)
          VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
+    $matriculas = [];
     $insPresenca = $pdo->prepare('INSERT INTO presencas (matricula_id, data, presente) VALUES (?, ?, ?)');
 
     foreach ($alunos as $i => [$nome, $nasc, $resp, $tel, $inst, $prof, $dia, $ini, $fim, $valor]) {
         $insAluno->execute([$nome, $nasc, $resp, $tel, $inst]);
         $insMatricula->execute([$pdo->lastInsertId(), $prof, $inst, $dia, $ini, $fim, $valor]);
         $matriculaId = $pdo->lastInsertId();
+        $matriculas[$i] = $matriculaId;
 
         // Chamadas das 4 últimas semanas (algumas faltas para o relatório ficar interessante)
         for ($semana = 4; $semana >= 1; $semana--) {
@@ -89,4 +91,18 @@ function inserirDadosFicticios(PDO $pdo): void
     );
     $repasse->execute([$thiago,  $mesPassado, 48.0, $mesPassado . '-10']);
     $repasse->execute([$geovana, $mesPassado, 48.0, $mesPassado . '-12']);
+
+    // Mensalidades informadas pelos professores
+    //   mês passado: todos pagaram, menos o João Vitor (índice 7)
+    //   este mês: Lucas (1) e João Vitor (7) não pagaram; Pedro (3) e Isabela (6) ainda sem informação
+    $mesAtual = date('Y-m');
+    $pagamento = $pdo->prepare('INSERT INTO pagamentos (matricula_id, mes, pago, observacao) VALUES (?, ?, ?, ?)');
+    foreach ($matriculas as $i => $matriculaId) {
+        $pagamento->execute([$matriculaId, $mesPassado, $i === 7 ? 0 : 1, $i === 7 ? 'Família pediu para pagar depois' : null]);
+        if (in_array($i, [1, 7], true)) {
+            $pagamento->execute([$matriculaId, $mesAtual, 0, null]);
+        } elseif (!in_array($i, [3, 6], true)) {
+            $pagamento->execute([$matriculaId, $mesAtual, 1, null]);
+        }
+    }
 }

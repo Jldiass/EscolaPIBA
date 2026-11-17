@@ -28,6 +28,7 @@ $itensMenu = [
     ['agenda',      'Agenda',       'agenda.php',             '🗓', false],
     ['chamada',     'Chamada',      'chamada/index.php',      '✓',  false],
     ['frequencia',  'Frequência',   'chamada/frequencia.php', '📊', false],
+    ['mensalidades','Mensalidades', 'mensalidades/index.php', '💳', false],
     ['grupo',       'Gestão',       null,                     '',   true],
     ['financeiro',  'Financeiro',   'financeiro/index.php',   '💰', true],
 ];
@@ -73,7 +74,6 @@ $itensMenu = [
                     <small><?= $usuario['perfil'] === 'admin' ? 'Administrador' : 'Professor(a)' ?></small>
                 </div>
                 <div class="acoes">
-                    <a class="botao botao-pequeno" href="<?= $raiz ?>conta.php" title="Trocar minha senha">🔑</a>
                     <a class="botao botao-pequeno" href="<?= $raiz ?>logout.php">Sair</a>
                 </div>
             </div>

@@ -101,3 +101,93 @@ function relatorioFrequencia(?int $professorId, string $inicio, string $fim): ar
     }
     return $linhas;
 }
+
+/**
+ * Próximas aulas a partir de agora, olhando os próximos 7 dias.
+ * Cada linha ganha a chave 'data' (AAAA-MM-DD) do dia em que a aula vai acontecer.
+ */
+function proximasAulas(?int $professorId = null, int $limite = 8): array
+{
+    $agora = date('H:i');
+    $lista = [];
+    for ($d = 0; $d < 7 && count($lista) < $limite; $d++) {
+        $dia = new DateTime("+$d day");
+        foreach (aulasDoDia((int) $dia->format('N'), $professorId) as $aula) {
+            if ($d === 0 && $aula['hora_fim'] <= $agora) {
+                continue;               // aula de hoje que já terminou
+            }
+            $aula['data'] = $dia->format('Y-m-d');
+            $lista[] = $aula;
+            if (count($lista) === $limite) {
+                break;
+            }
+        }
+    }
+    return $lista;
+}
+
+/**
+ * Alunos que o professor informou que NÃO pagaram a mensalidade.
+ * Junta os meses em aberto de cada matrícula e soma o valor devido.
+ */
+function alunosInadimplentes(?int $professorId = null): array
+{
+    $sql = "SELECT m.id, a.id AS aluno_id, a.nome AS aluno, m.instrumento, m.mensalidade, u.nome AS professor,
+                   GROUP_CONCAT(g.mes) AS meses, COUNT(g.id) AS qtd_meses
+            FROM pagamentos g
+            JOIN matriculas m ON m.id = g.matricula_id
+            JOIN alunos a     ON a.id = m.aluno_id
+            JOIN usuarios u   ON u.id = m.professor_id
+            WHERE g.pago = 0 AND m.ativo = 1 AND a.ativo = 1";
+    $params = [];
+    if ($professorId) {
+        $sql .= ' AND m.professor_id = ?';
+        $params[] = $professorId;
+    }
+    $sql .= ' GROUP BY m.id ORDER BY qtd_meses DESC, a.nome';
+
+    $stmt = conectar()->prepare($sql);
+    $stmt->execute($params);
+    $linhas = $stmt->fetchAll();
+    foreach ($linhas as &$linha) {
+        $meses = explode(',', $linha['meses']);
+        sort($meses);
+        $linha['meses'] = $meses;
+        $linha['total'] = $linha['qtd_meses'] * $linha['mensalidade'];
+    }
+    return $linhas;
+}
+
+/**
+ * Professores que ainda não repassaram a parte da escola.
+ * Olha o mês passado (já fechado) e o mês atual.
+ */
+function repassesPendentes(): array
+{
+    $pendentes = [];
+    foreach ([date('Y-m', strtotime('first day of last month')), date('Y-m')] as $mes) {
+        foreach (resumoFinanceiro($mes) as $linha) {
+            if (!$linha['repassado'] && $linha['parte_escola'] > 0) {
+                $linha['mes'] = $mes;
+                $pendentes[] = $linha;
+            }
+        }
+    }
+    return $pendentes;
+}
+
+/** Quantos alunos ativos ainda estão sem informação de pagamento no mês. */
+function mensalidadesSemInformacao(string $mes, ?int $professorId = null): int
+{
+    $sql = 'SELECT COUNT(*) FROM matriculas m JOIN alunos a ON a.id = m.aluno_id
+            LEFT JOIN pagamentos g ON g.matricula_id = m.id AND g.mes = ?
+            WHERE m.ativo = 1 AND a.ativo = 1 AND g.id IS NULL';
+    $params = [$mes];
+    if ($professorId) {
+        $sql .= ' AND m.professor_id = ?';
+        $params[] = $professorId;
+    }
+    $stmt = conectar()->prepare($sql);
+    $stmt->execute($params);
+    return (int) $stmt->fetchColumn();
+}

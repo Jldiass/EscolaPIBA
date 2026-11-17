@@ -5,18 +5,19 @@
 O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIBA. Antes, cadastros, horários, chamadas e o controle do dinheiro ficavam em cadernos e mensagens. Com o sistema, tudo isso fica em um só lugar:
 
 - o **administrador** (secretaria) cadastra alunos, professores e outros administradores, faz as matrículas e acompanha o financeiro;
-- cada **professor** entra com o próprio login, vê seus alunos e sua agenda da semana e faz a chamada.
+- cada **professor** entra com o próprio login, vê seus alunos e sua agenda da semana, faz a chamada e informa quem pagou a mensalidade.
 
 ## 2. Perfis de acesso
 
 | Recurso | Administrador | Professor |
 |---|:---:|:---:|
-| Painel inicial | Escola toda | Só os dados dele |
+| Painel inicial | Próximas aulas de todos, avisos, alunos que não pagaram, professores sem repasse | Próximas aulas dele, avisos, mensalidades em aberto, frequência baixa |
 | Ver alunos | Todos | Só os matriculados com ele |
 | Cadastrar, editar e excluir alunos | ✅ | ❌ |
 | Matricular aluno com professor | ✅ | ❌ |
 | Cadastrar professores e administradores, definir logins | ✅ | ❌ |
-| Trocar a própria senha (🔑) | ✅ | ✅ |
+| Definir e trocar senhas | ✅ (de todos, em Professores → Editar) | ❌ (pede ao admin) |
+| Informar se o aluno pagou a mensalidade | ❌ (só consulta) | ✅ (alunos dele) |
 | Agenda semanal | De todos, com filtro | A dele |
 | Fazer chamada | ❌ (só consulta) | Das aulas dele |
 | Consultar chamadas (presentes, faltas, chamadas não feitas) | De todos, com filtro por professor | Das aulas dele |
@@ -37,7 +38,7 @@ Cada professor tem uma ou mais **especialidades**. A matrícula do aluno é semp
 
 Novos professores e especialidades são cadastrados pelo administrador, em **Professores → + Novo professor**. Outros administradores (por exemplo, alguém da secretaria) entram em **Professores → + Novo administrador**.
 
-Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no primeiro acesso).
+Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no primeiro acesso, em Professores → Administradores → Editar).
 
 ## 4. Requisitos
 
@@ -57,8 +58,10 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF10 | Calcular, por mês, quanto cada professor recebe e quanto deve repassar à escola |
 | RF11 | Registrar e desfazer o repasse de cada professor no mês; mostrar quem está pendente |
 | RF12 | Permitir que o administrador ajuste o percentual da escola |
-| RF13 | Cada usuário pode trocar a própria senha; o administrador não pode remover o próprio acesso |
+| RF13 | O administrador define e troca as senhas de todos os usuários; ele não pode remover o próprio acesso |
 | RF14 | O administrador publica avisos: eventos sociais, eventos internos (com data, hora e local) e lembretes com validade (ex.: "não usar a sala 101"); todos os usuários veem os avisos e o painel mostra os próximos |
+| RF15 | O professor informa, mês a mês, se cada aluno dele pagou ou não a mensalidade (com observação); o administrador só consulta |
+| RF16 | Um painel inicial para cada perfil. Admin: próximas aulas de todos os professores, avisos e lembretes, alunos que não pagaram e professores com repasse atrasado. Professor: as próximas aulas dele, avisos, mensalidades em aberto e alunos com frequência abaixo de 75% |
 
 ### Requisitos não funcionais
 
@@ -87,6 +90,10 @@ Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100) + 2 de teoria (R$ 50) =
 
 **Chamada.** Quem faz a chamada no dia a dia é o próprio professor. O administrador vê a mesma tela só para consulta: a situação de cada aluno e quantas chamadas o professor ainda não fez. Se tentar salvar, o sistema recusa (erro 403).
 
+**Inadimplência.** São dois casos, os dois aparecem no painel do admin:
+- **Aluno que não pagou:** o aluno paga a mensalidade ao professor, e o professor marca em *Mensalidades* quem pagou e quem não pagou. Aparece no painel com os meses em aberto e o valor total. Quem ainda não foi informado no mês aparece como "sem informação".
+- **Professor sem repasse:** mês que já fechou e o professor não repassou a parte da escola. O mês atual ainda está no prazo e aparece só como lembrete.
+
 **Frequência.** `frequência = presenças ÷ aulas com chamada × 100`. Abaixo de **75%** o aluno aparece com o selo "atenção", para a escola procurar a família antes que ele desista.
 
 **Conflito de horário.** Duas aulas do mesmo professor se sobrepõem quando uma começa antes de a outra terminar. Nesse caso a matrícula é recusada.
@@ -104,6 +111,7 @@ erDiagram
     MATRICULAS ||--o{ PRESENCAS : "tem chamadas"
     USUARIOS ||--o{ REPASSES : "repassa"
     USUARIOS ||--o{ AVISOS : "publica"
+    MATRICULAS ||--o{ PAGAMENTOS : "mensalidades"
 
     USUARIOS {
         int id PK
@@ -148,6 +156,13 @@ erDiagram
         real valor
         text data_pagamento
     }
+    PAGAMENTOS {
+        int id PK
+        int matricula_id FK
+        text mes "AAAA-MM"
+        int pago "1 ou 0"
+        text observacao
+    }
     AVISOS {
         int id PK
         text tipo "social, interno ou lembrete"
@@ -169,7 +184,7 @@ Há também a tabela `configuracoes` (chave/valor), que guarda o `percentual_esc
 ![Login](img/01-login.png)
 
 ### Painel do administrador
-Nota musical 3D girando, faixa de instrumentos, números da escola, repasses pendentes e aulas do dia.
+Nota musical 3D girando e a próxima aula. Números da escola (alunos, aulas por semana, alunos que não pagaram, repasses atrasados). Depois, quatro quadros: próximas aulas de todos os professores, avisos e lembretes, alunos que não pagaram (informado pelo professor) e professores sem repasse.
 ![Painel do administrador](img/02-painel-secretaria.png)
 
 ### Alunos
@@ -204,6 +219,10 @@ Resumo do dia (presentes, faltas, chamadas não feitas), filtro por professor e 
 ### Financeiro
 ![Financeiro](img/09-financeiro.png)
 
+### Mensalidades vistas pelo administrador (só consulta)
+Quem pagou, quem não pagou e quem ainda não foi informado, com filtro por professor e o valor em aberto.
+![Mensalidades do administrador](img/19-mensalidades-admin.png)
+
 ### Avisos
 Lembretes ativos em amarelo e próximos eventos com a data em destaque, o tipo (social ou interno) e quanto tempo falta. Professores veem tudo, mas só o administrador edita.
 ![Avisos](img/13-avisos.png)
@@ -215,7 +234,7 @@ O administrador escolhe o tipo; o campo "válido até" só aparece para lembrete
 ### Área do professor (exemplo: Pastor Elias)
 Cada professor entra com o próprio login e só vê o que é dele. O menu não mostra Professores nem Financeiro.
 
-**Painel do professor:** alunos dele, aulas na semana, frequência dos últimos 30 dias e as aulas de hoje.
+**Painel do professor:** números dele (alunos, aulas por semana, frequência dos últimos 30 dias, mensalidades em aberto) e quatro quadros: minhas próximas aulas, avisos e lembretes, mensalidades em aberto e alunos com frequência baixa.
 ![Painel do professor](img/10-painel-professor.png)
 
 **Meus alunos:** separados por especialidade (aqui, os alunos de bateria).
@@ -229,8 +248,8 @@ Cada professor entra com o próprio login e só vê o que é dele. O menu não m
 **Frequência dos alunos dele:** quem está abaixo de 75% aparece com o selo "atenção".
 ![Frequência do professor](img/16-frequencia-professor.png)
 
-**Minha conta:** o professor troca a própria senha.
-![Trocar senha](img/17-conta-professor.png)
+**Mensalidades:** o professor marca quem pagou e quem não pagou no mês, com uma observação (ex.: "paga dia 20").
+![Mensalidades do professor](img/20-mensalidades-professor.png)
 
 ## 8. Identidade visual
 
@@ -240,7 +259,7 @@ Segue o guia de estilo do Mundo 3D, adaptado para música:
 - **Cores de destaque:** laranja `#ff6b2c`, rosa `#ff4fa3`, violeta `#7b5cff`, azul `#2f8cff`, verde-água `#00b8a9`, amarelo `#ffc93c`, verde `#1fa463`, com fundos pastel nos indicadores.
 - **Degradê arco-íris** na barra do topo do menu, no nome "PIBA", nas barras de frequência e na borda do dia de hoje na agenda.
 - **Fontes:** Inter Tight (títulos), Inter (texto) e JetBrains Mono (horários, valores e etiquetas).
-- **Animações:** nota musical 3D em Three.js no painel; cartões que aparecem subindo ao rolar (IntersectionObserver); ícones flutuando; faixa de instrumentos rolando; entradas com "quique"; avatares com anel girando. Quem ativa "reduzir movimento" no sistema operacional vê tudo parado.
+- **Animações:** nota musical 3D em Three.js no painel; cartões que aparecem subindo ao rolar (IntersectionObserver); ícones flutuando; entradas com "quique"; avatares com anel girando. Quem ativa "reduzir movimento" no sistema operacional vê tudo parado.
 
 ## 9. Segurança e privacidade
 
@@ -257,5 +276,5 @@ Segue o guia de estilo do Mundo 3D, adaptado para música:
 ## 10. Limitações e próximos passos
 
 - A mensalidade é a **atual** de cada matrícula. Se um valor mudar no meio do ano, os meses anteriores passam a mostrar o valor novo. Uma melhoria futura é guardar o histórico de valores.
-- O sistema não controla se o **aluno** pagou o professor, só o repasse do professor para a escola.
+- O pagamento do aluno é **informado pelo professor**. O sistema não recebe pagamentos nem emite recibos.
 - Ideias: notas e boletim, aviso por WhatsApp de falta e exportar relatórios em PDF.

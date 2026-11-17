@@ -371,7 +371,17 @@ input[type=checkbox] { accent-color: var(--tinta); width: 16px; height: 16px; ve
 .campo textarea { border: 1px solid var(--linha); border-radius: 12px; padding: 10px 13px; font: inherit; color: var(--texto); background: #fff; resize: vertical; }
 .campo textarea:focus { outline: 2px solid var(--violeta); outline-offset: 1px; }
 .avisos-painel { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.avisos-painel li { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.avisos-painel li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--linha); }
+.avisos-painel li:last-child { border-bottom: 0; padding-bottom: 0; }
+.avisos-painel li .selo { flex-shrink: 0; }
+.avisos-painel li div { display: grid; }
+
+/* ---------- Painel inicial (um para cada perfil) ---------- */
+.painel-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.painel-grade .cartao { margin: 0; }
+.painel-grade .vazio { padding: 22px 0; }
+.sem-quebra { white-space: nowrap; }
+.nota-rodape { margin: 12px 0 0; font-size: 12.5px; color: var(--suave); }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -381,6 +391,7 @@ input[type=checkbox] { accent-color: var(--tinta); width: 16px; height: 16px; ve
 /* ---------- Celular ---------- */
 @media (max-width: 1100px) {
     .grade-2 { grid-template-columns: 1fr; }
+    .painel-grade { grid-template-columns: 1fr; }
     .formulario-3 { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 820px) {

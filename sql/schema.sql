@@ -9,6 +9,7 @@
 --   repasses    -> valor que cada professor repassou à escola no mês
 --   configuracoes -> parâmetros da escola (ex.: % da escola)
 --   avisos      -> eventos sociais, eventos internos e lembretes
+--   pagamentos  -> mensalidade do aluno: o professor informa se pagou no mês
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -84,4 +85,15 @@ CREATE TABLE IF NOT EXISTS avisos (
     valido_ate  TEXT,              -- lembrete: até quando aparece (vazio = até ser apagado)
     criado_por  INTEGER REFERENCES usuarios(id),
     criado_em   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+-- Mensalidades: o professor informa, mês a mês, se cada aluno pagou ou não
+CREATE TABLE IF NOT EXISTS pagamentos (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    matricula_id  INTEGER NOT NULL REFERENCES matriculas(id) ON DELETE CASCADE,
+    mes           TEXT    NOT NULL,   -- 'AAAA-MM'
+    pago          INTEGER NOT NULL,   -- 1 = pagou, 0 = não pagou
+    observacao    TEXT,
+    informado_em  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (matricula_id, mes)        -- uma informação por aluno por mês
 );
