@@ -1,7 +1,7 @@
 <?php
 /**
  * Chamada do ensaio da orquestra.
- * - O regente marca quem veio e quem faltou (o ensaio é criado ao salvar).
+ * - O maestro com login de professor marca quem veio e quem faltou (o ensaio é criado ao salvar).
  * - Admin e outros professores só consultam.
  */
 require __DIR__ . '/../includes/auth.php';
@@ -27,7 +27,7 @@ $membros = $pdo->query('SELECT * FROM orquestra_membros WHERE ativo = 1 ORDER BY
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!podeFazerChamadaOrquestra()) {
         http_response_code(403);
-        exit('A chamada da orquestra é feita pelo regente.');
+        exit('A chamada da orquestra é feita pelo maestro.');
     }
     verificarCsrf();
     $obs = trim($_POST['observacao'] ?? '');
@@ -82,21 +82,22 @@ require __DIR__ . '/../includes/header.php';
         <h1>🎼 Chamada da orquestra</h1>
         <p><?= DIAS_SEMANA[(int) $dt->format('N')] ?>, <?= $dt->format('d/m/Y') ?> ·
            <?= $ensaio ? "$vieram de " . count($marcadas) . ' presentes' : 'sem ensaio registrado neste dia' ?>
-           <?= $podeMarcar ? '' : ' · consulta: quem marca é o regente' ?></p>
+           <?= $podeMarcar ? '' : ' · consulta: quem marca é o maestro' ?></p>
     </div>
     <div class="acoes">
-        <a class="botao" href="index.php">← Membros</a>
         <a class="botao" href="?data=<?= $anterior ?>">← Dia anterior</a>
         <a class="botao" href="?data=<?= date('Y-m-d') ?>">Hoje</a>
         <?php if ($data < date('Y-m-d')): ?><a class="botao" href="?data=<?= $proximo ?>">Próximo dia →</a><?php endif; ?>
     </div>
 </div>
 
+<?php $aba = 'chamada'; require __DIR__ . '/../includes/abas-orquestra.php'; ?>
+
 <?php if (isset($_GET['salvas'])): ?>
     <div class="alerta alerta-sucesso">Chamada do ensaio salva (<?= (int) $_GET['salvas'] ?> membro(s)). ♪</div>
 <?php endif; ?>
 
-<nav class="filtros">
+<nav class="filtros" aria-label="Últimos ensaios">
     <?php foreach ($ultimos as $u): ?>
         <a class="filtro <?= $u['data'] === $data ? 'filtro-ativo' : '' ?>" href="?data=<?= $u['data'] ?>">
             <?= date('d/m', strtotime($u['data'])) ?> · <?= $u['vieram'] ?> de <?= $u['marcados'] ?></a>

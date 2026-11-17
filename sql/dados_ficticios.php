@@ -101,8 +101,13 @@ function inserirDadosFicticios(PDO $pdo): void
     $mesAtual = date('Y-m');
     $pagamento = $pdo->prepare('INSERT INTO pagamentos (matricula_id, mes, pago, observacao) VALUES (?, ?, ?, ?)');
     foreach ($matriculas as $i => $matriculaId) {
-        if (in_array($i, [3, 4, 6], true)) {
-            continue;   // bolsista e teoria gratuita: não pagam
+        if (in_array($i, [4, 6], true)) {
+            continue;   // teoria gratuita: não tem mensalidade
+        }
+        if ($i === 3) {   // Pedro é bolsista: a igreja paga a bolsa. Mês passado e este mês ainda não chegaram.
+            $pagamento->execute([$matriculaId, $mesPassado, 0, 'Bolsa: aguardando repasse da igreja']);
+            $pagamento->execute([$matriculaId, $mesAtual, 0, null]);
+            continue;
         }
         $pagamento->execute([$matriculaId, $mesPassado, $i === 7 ? 0 : 1, $i === 7 ? 'Família pediu para pagar depois' : null]);
         if (in_array($i, [1, 7], true)) {
@@ -112,8 +117,11 @@ function inserirDadosFicticios(PDO $pdo): void
         }
     }
 
-    // Orquestra: o Pastor Elias rege e faz a chamada dos ensaios (sábado à tarde)
-    $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('regente_orquestra', ?)")->execute([$elias]);
+    // Orquestra: maestros. O Pastor Elias rege e faz a chamada dos ensaios (sábado à tarde).
+    $maestro = $pdo->prepare('INSERT INTO orquestra_maestros (nome, funcao, telefone, usuario_id) VALUES (?, ?, ?, ?)');
+    $maestro->execute(['Pastor Elias',  'Regente titular',    '(00) 90000-0100', $elias]);
+    $maestro->execute(['Débora Lins',   'Regente assistente', '(00) 90000-0101', null]);
+    $maestro->execute(['Ana Beatriz Souza', 'Spalla',         '(00) 90000-0001', null]);
 
     // [nome, naipe, instrumento, aluno (índice em $alunos ou null), presença nos 8 últimos ensaios]
     //   1 = veio, 0 = faltou; null na presença = entrou agora (status "Novo")
@@ -132,7 +140,7 @@ function inserirDadosFicticios(PDO $pdo): void
         ['Helena Duarte',        'Teclado',   'Piano',              null, null],
     ];
     $insMembro = $pdo->prepare(
-        'INSERT INTO orquestra_membros (nome, naipe, instrumento, aluno_id, criado_em) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO orquestra_membros (nome, naipe, instrumento, aluno_id, criado_em, telefone) VALUES (?, ?, ?, ?, ?, ?)'
     );
     $alunoIds = $pdo->query('SELECT id FROM alunos ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
 
@@ -145,14 +153,46 @@ function inserirDadosFicticios(PDO $pdo): void
         $ensaios[] = $pdo->lastInsertId();
     }
     $insPresencaOrq = $pdo->prepare('INSERT INTO orquestra_presencas (ensaio_id, membro_id, presente) VALUES (?, ?, ?)');
-    foreach ($membros as [$nome, $naipe, $instrumento, $aluno, $presencas]) {
+    foreach ($membros as $n => [$nome, $naipe, $instrumento, $aluno, $presencas]) {
+        $telefone = sprintf('(00) 90000-%04d', 200 + $n);   // telefones fictícios
         $entrada = $presencas === null ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', strtotime('-90 days'));
-        $insMembro->execute([$nome, $naipe, $instrumento, $aluno === null ? null : $alunoIds[$aluno], $entrada]);
+        $insMembro->execute([$nome, $naipe, $instrumento, $aluno === null ? null : $alunoIds[$aluno], $entrada, $telefone]);
         $membroId = $pdo->lastInsertId();
         if ($presencas !== null) {
             foreach (str_split($presencas) as $i => $veio) {
                 $insPresencaOrq->execute([$ensaios[$i], $membroId, (int) $veio]);
             }
         }
+    }
+
+    // Banco de partituras: pastas padrão + uma pasta criada pelo admin, com PDFs de exemplo
+    require_once __DIR__ . '/../includes/partituras.php';
+    garantirPastasPadrao($pdo);
+    array_map('unlink', glob(pastaArquivosPartituras() . '/*.pdf'));   // banco novo: PDFs antigos ficaram órfãos
+    $pdo->prepare("INSERT INTO partituras_pastas (nome, descricao, icone, criado_por) VALUES (?, ?, '🎄', 1)")
+        ->execute(['Apresentação de Natal', 'Repertório da apresentação de fim de ano aberta à comunidade.']);
+    $idPasta = array_column($pdo->query('SELECT id, nome FROM partituras_pastas')->fetchAll(), 'id', 'nome');
+    // [pasta, título, autor, instrumento, nível, enviado por]
+    $acervo = [
+        ['Orquestra',             'Ode à Alegria (9ª Sinfonia)',          'L. van Beethoven',      'Orquestra completa',     'basico',        $elias],
+        ['Orquestra',             'Canon em Ré',                          'J. Pachelbel',          'Cordas',                 'intermediario', $elias],
+        ['Orquestra',             'Marcha Radetzky',                      'J. Strauss (pai)',      'Orquestra completa',     'intermediario', $elias],
+        ['Orquestra',             'A Primavera (As Quatro Estações)',     'A. Vivaldi',            'Violino solo e cordas',  'avancado',      $elias],
+        ['Métodos de ensino',     'Violino: primeiras peças e escalas',   'Apostila do prof. Thiago', 'Violino',             'basico',        $thiago],
+        ['Métodos de ensino',     'Violino: estudos em segunda posição',  'Apostila do prof. Thiago', 'Violino',             'intermediario', $thiago],
+        ['Métodos de ensino',     'Viola: leitura na clave de dó',        'Apostila da prof. Geovana', 'Viola',              'basico',        $geovana],
+        ['Métodos de ensino',     'Teoria musical: leitura rítmica',      'Apostila do Pastor Elias', 'Teoria musical',      'basico',        $elias],
+        ['Apresentação de Natal', 'Jingle Bells (arranjo para orquestra)','J. Pierpont',           'Orquestra completa',     'basico',        1],
+        ['Apresentação de Natal', 'Valsa das Flores (O Quebra-Nozes)',    'P. I. Tchaikovsky',     'Orquestra completa',     'avancado',      1],
+    ];
+    $insPartitura = $pdo->prepare('INSERT INTO partituras (pasta_id, titulo, autor, instrumento, nivel, arquivo, tamanho, enviado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    foreach ($acervo as [$pasta, $tituloPartitura, $autor, $instrumento, $nivel, $quem]) {
+        $pdf = pdfDeExemplo($tituloPartitura, [
+            "$autor  ·  $instrumento  ·  nível " . NIVEIS_PARTITURA[$nivel][0],
+            'Escola de Música PIBA - acervo da escola (arquivo de exemplo para demonstração)',
+        ]);
+        $arquivo = bin2hex(random_bytes(16)) . '.pdf';
+        file_put_contents(pastaArquivosPartituras() . '/' . $arquivo, $pdf);
+        $insPartitura->execute([$idPasta[$pasta], $tituloPartitura, $autor, $instrumento, $nivel, $arquivo, strlen($pdf), $quem]);
     }
 }

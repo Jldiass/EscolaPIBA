@@ -10,7 +10,7 @@
 --   configuracoes -> parâmetros da escola (ex.: % da escola)
 --   avisos      -> eventos sociais, eventos internos e lembretes
 --   pagamentos  -> mensalidade do aluno: o professor informa se pagou no mês
---   orquestra_* -> membros da orquestra, ensaios e presença (assiduidade)
+--   orquestra_* -> membros, maestros, ensaios e presença (assiduidade)
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -124,4 +124,40 @@ CREATE TABLE IF NOT EXISTS orquestra_presencas (
     membro_id   INTEGER NOT NULL REFERENCES orquestra_membros(id) ON DELETE CASCADE,
     presente    INTEGER NOT NULL,         -- 1 = veio, 0 = faltou
     UNIQUE (ensaio_id, membro_id)
+);
+
+-- Maestros da orquestra (regente titular, assistente, chefes de naipe...).
+-- Quem tem login de professor ligado (usuario_id) pode fazer a chamada dos ensaios.
+CREATE TABLE IF NOT EXISTS orquestra_maestros (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome        TEXT    NOT NULL,
+    funcao      TEXT    NOT NULL,
+    telefone    TEXT,
+    usuario_id  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    ativo       INTEGER NOT NULL DEFAULT 1
+);
+
+-- Banco de partituras: pastas (Orquestra, Métodos de ensino e as que o usuário criar)
+-- e os arquivos PDF de cada pasta, com o nível (básico, intermediário, avançado).
+CREATE TABLE IF NOT EXISTS partituras_pastas (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome        TEXT    NOT NULL UNIQUE,
+    descricao   TEXT,
+    icone       TEXT    NOT NULL DEFAULT '📁',
+    fixa        INTEGER NOT NULL DEFAULT 0,   -- 1 = pasta padrão, não pode ser excluída
+    criado_por  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    criado_em   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS partituras (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    pasta_id      INTEGER NOT NULL REFERENCES partituras_pastas(id) ON DELETE CASCADE,
+    titulo        TEXT    NOT NULL,
+    autor         TEXT,                       -- compositor, arranjador ou autor do método
+    instrumento   TEXT,                       -- ex.: Violino, Orquestra completa, Flauta
+    nivel         TEXT    NOT NULL,           -- basico, intermediario, avancado
+    arquivo       TEXT    NOT NULL,           -- nome do PDF salvo em database/partituras/
+    tamanho       INTEGER NOT NULL DEFAULT 0, -- bytes
+    enviado_por   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    criado_em     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

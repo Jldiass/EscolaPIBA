@@ -94,3 +94,20 @@ function especialidades(?string $texto): array
 {
     return array_values(array_filter(array_map('trim', explode(',', $texto ?? ''))));
 }
+
+/**
+ * Link do WhatsApp (wa.me) com uma mensagem pronta.
+ * Telefone com DDD, ex.: "(21) 98888-7777" -> https://wa.me/5521988887777?text=...
+ * Devolve null se o telefone não tiver DDD + número.
+ */
+function linkWhatsApp(?string $telefone, string $mensagem = ''): ?string
+{
+    $numero = preg_replace('/\D/', '', $telefone ?? '');
+    if (strlen($numero) === 10 || strlen($numero) === 11) {
+        $numero = '55' . $numero;          // código do Brasil
+    }
+    if (strlen($numero) < 12 || strlen($numero) > 13) {
+        return null;
+    }
+    return 'https://wa.me/' . $numero . ($mensagem !== '' ? '?text=' . rawurlencode($mensagem) : '');
+}

@@ -417,3 +417,20 @@ input[type=checkbox] { accent-color: var(--tinta); width: 16px; height: 16px; ve
 .bolinhas i { width: 12px; height: 12px; border-radius: 99px; background: var(--cinza); border: 1px solid var(--linha); }
 .bolinhas .b-veio { background: var(--verde); border-color: var(--verde); }
 .bolinhas .b-faltou { background: var(--rosa); border-color: var(--rosa); }
+
+/* ---------- WhatsApp e e-mail prontos ---------- */
+.botao-whats { background: #25d366; border-color: #25d366; color: #fff; }
+.botao-whats:hover { background: #1ebe5b; color: #fff; }
+.botao-email { background: var(--azul); border-color: var(--azul); color: #fff; }
+.cartao-maestro { display: grid; grid-template-columns: auto 1fr; gap: 12px 14px; align-items: center; }
+.cartao-maestro > div:nth-child(2) { display: grid; gap: 4px; }
+.cartao-maestro .acoes { grid-column: 1 / -1; }
+.cartao-maestro.inativo { opacity: .6; }
+
+/* Banco de partituras: cartões de pasta */
+.grade-pastas { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.cartao-pasta { display: grid; gap: 4px; margin: 0; padding: 16px; color: inherit; text-decoration: none; border: 2px solid transparent; transition: border-color .15s, transform .15s; }
+.cartao-pasta:hover { transform: translateY(-2px); border-color: var(--p-lavanda); }
+.cartao-pasta.pasta-ativa { border-color: var(--tinta); }
+.cartao-pasta .icone-pasta { font-size: 28px; line-height: 1; }
+a.cartao.indicador { color: inherit; text-decoration: none; }

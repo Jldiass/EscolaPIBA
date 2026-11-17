@@ -2,6 +2,8 @@
 
 ## 1. Visão geral
 
+A escola de música da PIBA é um **projeto comunitário e cultural**, aberto a todos da comunidade: a igreja cede o espaço e **banca a teoria musical, a prática de orquestra e as bolsas** de instrumento de quem não pode pagar. O objetivo é levar formação musical, repertório e apresentações abertas a quem mora no bairro.
+
 O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIBA. Antes, cadastros, horários, chamadas e o controle do dinheiro ficavam em cadernos e mensagens. Com o sistema, tudo isso fica em um só lugar:
 
 - o **administrador** (secretaria) cadastra alunos, professores e outros administradores, faz as matrículas e acompanha o financeiro;
@@ -66,7 +68,9 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF14 | O administrador publica avisos: eventos sociais, eventos internos (com data, hora e local) e lembretes com validade (ex.: "não usar a sala 101"); todos os usuários veem os avisos e o painel mostra os próximos |
 | RF15 | O professor informa, mês a mês, se cada aluno dele pagou ou não a mensalidade (com observação); o administrador só consulta |
 | RF16 | Um painel inicial para cada perfil. Admin: próximas aulas de todos os professores, avisos e lembretes, alunos que não pagaram e professores com repasse atrasado. Professor: as próximas aulas dele, avisos, mensalidades em aberto e alunos com frequência abaixo de 75% |
-| RF17 | Orquestra: cadastro dos membros (alunos da escola ou não) por naipe e instrumento, chamada dos ensaios feita pelo regente e status de assiduidade de cada membro (Frequente, De vez em quando, Ausente, Novo) calculado pelos últimos 8 ensaios |
+| RF17 | Orquestra: cadastro dos membros (alunos da escola ou não) por naipe e instrumento, cadastro dos **maestros** (regente titular, assistente, spalla, chefe de naipe...), chamada dos ensaios feita pelo maestro e status de assiduidade de cada membro (Frequente, De vez em quando, Ausente, Novo) calculado pelos últimos 8 ensaios. Para quem está ausente ou vem de vez em quando, um botão abre o **WhatsApp** com uma mensagem pronta |
+| RF18 | Cobrança: o sistema separa o aluno **pagante** (paga a própria mensalidade) do aluno **bolsista** (a **igreja paga a bolsa**). Para o pagante em aberto, um botão abre o WhatsApp com a mensagem de cobrança pronta; para as bolsas em aberto, o admin envia um **e-mail pronto para a igreja**, com cada aluno, os meses e o total |
+| RF19 | Banco de partituras: acervo em PDF com as pastas padrão **Orquestra** e **Métodos de ensino**, pastas criadas pelos usuários (ex.: apresentação de Natal) e o **nível** de cada partitura (básico, intermediário, avançado), com busca e filtros |
 
 ### Requisitos não funcionais
 
@@ -83,8 +87,17 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 
 **O que é pago e o que é gratuito.** A escola é um projeto cultural da igreja, aberto à comunidade.
 - **Teoria musical** e **prática de orquestra** são **bancadas pela igreja**: a matrícula fica com mensalidade 0 ("Gratuita").
-- Só as **aulas de instrumento** têm mensalidade. O aluno que consegue **bolsa da igreja** fica marcado como **Bolsista** e também não paga.
-- Aulas gratuitas e de bolsistas ficam fora da cobrança, do repasse e da inadimplência. O resumo do mês mostra quantas são.
+- Só as **aulas de instrumento** têm mensalidade. O aluno que consegue **bolsa da igreja** fica marcado como **Bolsista**: ele não paga nada, e **quem paga a bolsa é a igreja**.
+- Aulas gratuitas e de bolsistas ficam fora da cobrança ao aluno, do repasse e da inadimplência dos alunos. O resumo do mês mostra quantas são.
+
+**Cobrança (quem paga cada mensalidade).**
+
+| Aluno | Quem paga | Como cobrar quando atrasa |
+|---|---|---|
+| **Pagante** | o próprio aluno (ou o responsável) | botão **💬 Cobrar**: abre o WhatsApp com a mensagem pronta ("Olá, fulano! ... a mensalidade de outubro está em aberto...") |
+| **Bolsista** | **a igreja** (bolsa) | o professor marca que a bolsa do mês não chegou; o admin vê as **bolsas em aberto** e clica em **✉️ Enviar e-mail pronto para a igreja**, que lista cada aluno bolsista, os meses e o total |
+
+O e-mail da tesouraria da igreja é cadastrado pelo admin na própria tela de mensalidades. Nenhuma mensagem é enviada sozinha: o botão só abre o WhatsApp ou o e-mail já preenchidos, e a pessoa confere antes de enviar.
 
 **Mensalidade e repasse.** O aluno de instrumento paga a mensalidade ao professor. O professor fica com uma parte e repassa à escola o **percentual da escola** (padrão **30%**, ajustável em Gestão → Financeiro → Repasses dos professores).
 
@@ -114,7 +127,9 @@ Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100 cada) = **R$ 200**. Os 2
 | menos de 40% | **Ausente** |
 | nenhum ensaio ainda | **Novo** |
 
-Quem faz a chamada do ensaio é o **regente** (escolhido pelo admin; nos dados de exemplo, o Pastor Elias). O membro que sai da orquestra é desativado, e o histórico fica guardado.
+Quem faz a chamada do ensaio é o **maestro** que tem login de professor ligado (nos dados de exemplo, o Pastor Elias, regente titular). O admin cadastra os maestros e a função de cada um. O membro que sai da orquestra é desativado, e o histórico fica guardado. Para quem está **Ausente** ou **De vez em quando**, o botão do WhatsApp abre a conversa com uma mensagem pronta, para a orquestra chamar a pessoa de volta.
+
+**Banco de partituras.** Todo usuário (admin e professores) consulta o acervo, envia PDFs e cria pastas. As pastas **Orquestra** e **Métodos de ensino** são fixas. Exclui uma partitura quem a enviou ou o admin; uma pasta criada só pode ser excluída vazia. O sistema só aceita PDF de verdade (confere o conteúdo, não só a extensão), até 20 MB, e os arquivos só abrem para quem está logado.
 
 **Frequência.** `frequência = presenças ÷ aulas com chamada × 100`. Abaixo de **75%** o aluno aparece com o selo "atenção", para a escola procurar a família antes que ele desista.
 
@@ -267,7 +282,7 @@ Um só item no menu, com três abas.
 **Resumo do mês:** quanto entra de mensalidade (paga, não paga, sem informação), quantas aulas são bancadas pela igreja (gratuitas e bolsistas), a parte da escola e quanto já foi repassado. Também mostra a inadimplência: alunos que não pagaram e professores com repasse atrasado.
 ![Financeiro: resumo do mês](img/09-financeiro.png)
 
-**Mensalidades dos alunos (só consulta):** quem pagou, quem não pagou e quem ainda não foi informado, com filtro por professor e o valor em aberto.
+**Mensalidades dos alunos (só consulta):** quem pagou, quem não pagou e quem ainda não foi informado, com filtro por professor. A coluna **Quem paga** separa o aluno pagante do bolsista (🎓 Igreja). O botão **💬 Cobrar** abre o WhatsApp com a cobrança pronta, e no fim da página ficam as **bolsas da igreja em aberto**, com o botão do e-mail pronto para a igreja.
 ![Mensalidades do administrador](img/19-mensalidades-admin.png)
 
 **Repasses dos professores:** quanto cada professor deve repassar, quem já repassou e o percentual da escola.
@@ -278,14 +293,27 @@ Na ficha do aluno, o admin dá ou tira a bolsa da igreja. Na nova matrícula, a 
 ![Ficha de aluno bolsista](img/22-ficha-bolsista.png)
 
 ### Orquestra
-Membros por naipe, com as bolinhas dos últimos 8 ensaios (verde = veio, rosa = faltou), a presença em % e o status. Os filtros mostram só os frequentes, os de vez em quando, os ausentes ou os novos. O admin cadastra membros e escolhe o regente.
+Três abas: **Membros**, **Maestros** e **Chamada dos ensaios**. Membros por naipe, com as bolinhas dos últimos 8 ensaios (verde = veio, rosa = faltou), a presença em % e o status. Os filtros mostram só os frequentes, os de vez em quando, os ausentes ou os novos, e quem precisa ser chamado tem o botão **💬 WhatsApp**.
 ![Orquestra](img/23-orquestra.png)
 
-**Chamada do ensaio (regente):** o regente marca presente ou faltou para cada membro e pode deixar uma observação (repertório, recado).
+**Maestros:** regente titular, regente assistente, spalla e chefes de naipe, com WhatsApp de cada um. Quem tem login de professor ligado faz a chamada dos ensaios.
+![Maestros da orquestra](img/26-orquestra-maestros.png)
+
+**Chamada do ensaio (maestro):** o maestro marca presente ou faltou para cada membro e pode deixar uma observação (repertório, recado).
 ![Chamada da orquestra pelo regente](img/24-orquestra-chamada-regente.png)
 
 **Chamada do ensaio vista pelo admin (só consulta):**
 ![Chamada da orquestra vista pelo admin](img/25-orquestra-chamada-admin.png)
+
+### Banco de partituras
+O acervo musical da escola em PDF: partituras da orquestra, métodos de ensino dos professores e repertório das apresentações (ex.: Natal). Cada partitura tem compositor ou autor, instrumento e nível (básico, intermediário, avançado). Os cartões no topo contam o acervo por nível, e as pastas filtram a lista.
+![Banco de partituras](img/27-partituras.png)
+
+**Métodos de ensino:** as apostilas e métodos que os professores usam nas aulas, separados por instrumento e nível.
+![Métodos de ensino](img/28-partituras-metodos.png)
+
+**Professor consultando a pasta da orquestra:** pode abrir, baixar, enviar e excluir as partituras que ele mesmo enviou.
+![Partituras da orquestra vistas pelo professor](img/29-partituras-orquestra-professor.png)
 
 ### Avisos
 Lembretes ativos em amarelo e próximos eventos com a data em destaque, o tipo (social ou interno) e quanto tempo falta. Professores veem tudo, mas só o administrador edita.

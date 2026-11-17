@@ -200,3 +200,70 @@ function mensalidadesSemInformacao(string $mes, ?int $professorId = null): int
     $stmt->execute($params);
     return (int) $stmt->fetchColumn();
 }
+
+/** Aulas com mensalidade: quem paga é o aluno (pagante) ou a igreja (bolsista). */
+const AULA_COM_MENSALIDADE = 'm.mensalidade > 0';
+
+/**
+ * Bolsas que a igreja ainda não pagou (o professor marcou "não pagou"
+ * na mensalidade de um aluno bolsista). Uma linha por aluno, com os meses.
+ */
+function bolsasEmAberto(): array
+{
+    $linhas = conectar()->query(
+        "SELECT m.id, a.nome AS aluno, m.instrumento, m.mensalidade, u.nome AS professor,
+                GROUP_CONCAT(g.mes) AS meses, COUNT(g.id) AS qtd_meses
+         FROM pagamentos g
+         JOIN matriculas m ON m.id = g.matricula_id
+         JOIN alunos a     ON a.id = m.aluno_id
+         JOIN usuarios u   ON u.id = m.professor_id
+         WHERE g.pago = 0 AND m.ativo = 1 AND a.ativo = 1 AND m.bolsista = 1 AND m.mensalidade > 0
+         GROUP BY m.id ORDER BY a.nome"
+    )->fetchAll();
+    foreach ($linhas as &$linha) {
+        $meses = explode(',', $linha['meses']);
+        sort($meses);
+        $linha['meses'] = $meses;
+        $linha['total'] = $linha['qtd_meses'] * $linha['mensalidade'];
+    }
+    return $linhas;
+}
+
+/**
+ * WhatsApp de cobrança para o aluno pagante (ou o responsável, se for menor).
+ * $aluno precisa de: aluno, responsavel, telefone, instrumento, mensalidade; $meses = ['2026-11', ...].
+ */
+function whatsappCobranca(array $aluno, array $meses): ?string
+{
+    $contato = $aluno['responsavel'] ?: $aluno['aluno'];
+    $primeiro = explode(' ', trim($contato))[0];
+    $listaMeses = implode(', ', array_map('nomeMes', $meses));
+    $total = dinheiro($aluno['mensalidade'] * count($meses));
+    $texto = "Olá, $primeiro! Aqui é da Escola de Música PIBA. "
+        . 'Consta em aberto a mensalidade das aulas de ' . $aluno['instrumento']
+        . ($aluno['responsavel'] ? ' de ' . explode(' ', $aluno['aluno'])[0] : '')
+        . " ($listaMeses), no total de $total. "
+        . 'Se já pagou, por favor desconsidere. Qualquer dúvida, estamos à disposição. Obrigado!';
+    return linkWhatsApp($aluno['telefone'], $texto);
+}
+
+/** Link mailto: com o e-mail pronto para a igreja, cobrando as bolsas em aberto. */
+function emailBolsasIgreja(array $bolsas): string
+{
+    $total = array_sum(array_column($bolsas, 'total'));
+    $linhas = '';
+    foreach ($bolsas as $b) {
+        $linhas .= '- ' . $b['aluno'] . ' (' . $b['instrumento'] . ', prof. ' . $b['professor'] . '): '
+            . implode(', ', array_map('nomeMes', $b['meses'])) . ' = ' . dinheiro($b['total']) . "\n";
+    }
+    $assunto = 'Bolsas em aberto - Escola de Música PIBA';
+    $corpo = "Prezados,\n\n"
+        . "A Escola de Música PIBA, projeto cultural e comunitário que oferece aulas de música abertas a todos, "
+        . "agradece o apoio da igreja com as bolsas de estudo.\n\n"
+        . "Seguem as bolsas de instrumento ainda em aberto:\n\n"
+        . $linhas
+        . "\nTotal em aberto: " . dinheiro($total) . "\n\n"
+        . "Pedimos, por gentileza, a regularização do repasse das bolsas. Ficamos à disposição para qualquer dúvida.\n\n"
+        . "Atenciosamente,\nSecretaria da Escola de Música PIBA";
+    return 'mailto:' . str_replace('%40', '@', rawurlencode(configuracao('email_igreja', ''))) . '?subject=' . rawurlencode($assunto) . '&body=' . rawurlencode($corpo);
+}

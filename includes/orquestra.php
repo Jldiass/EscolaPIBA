@@ -23,18 +23,41 @@ const STATUS_ORQUESTRA = [
     'novo'      => ['Novo',             'selo-inativo'],
 ];
 
-/** Id do professor que rege a orquestra (é quem faz a chamada dos ensaios). */
-function regenteOrquestra(): ?int
+const FUNCOES_MAESTRO = ['Regente titular', 'Regente assistente', 'Spalla', 'Chefe de naipe', 'Preparador(a) de coro'];
+
+/** Maestros (ativos por padrão), com o login de professor ligado, se houver. */
+function maestrosOrquestra(bool $soAtivos = true): array
 {
-    $id = (int) configuracao('regente_orquestra', '0');
-    return $id ?: null;
+    return conectar()->query(
+        'SELECT m.*, u.nome AS login_nome FROM orquestra_maestros m LEFT JOIN usuarios u ON u.id = m.usuario_id'
+        . ($soAtivos ? ' WHERE m.ativo = 1' : '') . ' ORDER BY m.ativo DESC, m.id'
+    )->fetchAll();
 }
 
-/** Só o regente marca a chamada do ensaio; o admin cadastra membros e consulta. */
+/**
+ * Quem faz a chamada do ensaio: o professor ligado a um maestro ativo.
+ * O admin cadastra membros e maestros e só consulta a chamada.
+ */
 function podeFazerChamadaOrquestra(): bool
 {
     $usuario = usuarioAtual();
-    return $usuario && !ehAdmin() && (int) $usuario['id'] === regenteOrquestra();
+    if (!$usuario || ehAdmin()) {
+        return false;
+    }
+    $stmt = conectar()->prepare('SELECT COUNT(*) FROM orquestra_maestros WHERE usuario_id = ? AND ativo = 1');
+    $stmt->execute([$usuario['id']]);
+    return (bool) $stmt->fetchColumn();
+}
+
+/** Mensagem pronta para chamar o membro, conforme o status de assiduidade. */
+function mensagemContato(string $nome, string $status): string
+{
+    $primeiro = explode(' ', trim($nome))[0];
+    return match ($status) {
+        'ausente'  => "Olá, $primeiro! Aqui é da Escola de Música PIBA. Sentimos sua falta nos ensaios da orquestra. Está tudo bem? Se precisar de alguma ajuda para voltar, conte com a gente!",
+        'as_vezes' => "Olá, $primeiro! Aqui é da Escola de Música PIBA. Notamos que você não tem conseguido vir a todos os ensaios da orquestra. Contamos com você no próximo ensaio!",
+        default    => "Olá, $primeiro! Aqui é da Escola de Música PIBA, sobre a orquestra.",
+    };
 }
 
 /** Classifica um percentual de presença. */

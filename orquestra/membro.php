@@ -114,7 +114,7 @@ require __DIR__ . '/../includes/header.php';
             <input id="instrumento" name="instrumento" required placeholder="Ex.: Violoncelo" value="<?= e($membro['instrumento']) ?>">
         </div>
         <div class="campo">
-            <label for="telefone">Telefone</label>
+            <label for="telefone">WhatsApp <small>(com DDD, para o botão de contato)</small></label>
             <input id="telefone" name="telefone" value="<?= e($membro['telefone'] ?? '') ?>">
         </div>
         <?php if ($id): ?>

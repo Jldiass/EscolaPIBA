@@ -36,9 +36,13 @@ EscolaPIBA/
 │   ├── mensalidades.php      Professor informa quem pagou; admin só consulta
 │   └── repasses.php          Repasses dos professores e percentual da escola (só admin)
 ├── orquestra/
-│   ├── index.php             Membros com status de assiduidade + escolha do regente
-│   ├── chamada.php           Chamada do ensaio (regente marca; os outros consultam)
+│   ├── index.php             Membros com status de assiduidade + botão de WhatsApp
+│   ├── maestros.php          Maestros da orquestra (admin cadastra; quem tem login faz a chamada)
+│   ├── chamada.php           Chamada do ensaio (maestro marca; os outros consultam)
 │   └── membro.php            Cadastrar / editar membro (admin)
+├── partituras/
+│   ├── index.php             Banco de partituras: pastas, níveis, envio de PDF, nova pasta
+│   └── arquivo.php           Abre ou baixa o PDF (só com login)
 ├── avisos/
 │   ├── index.php             Lembretes, próximos eventos e histórico (admin exclui)
 │   └── form.php              Cadastrar / editar aviso (só admin)
@@ -46,9 +50,13 @@ EscolaPIBA/
 │   ├── auth.php              Login, sessão, permissões e proteção CSRF
 │   ├── consultas.php         Consultas reutilizadas (aulas do dia, financeiro, frequência)
 │   ├── avisos.php            Tipos de aviso e consultas (lembretes ativos, próximos eventos)
+│   ├── orquestra.php         Status de assiduidade, maestros e mensagens prontas
+│   ├── partituras.php        Níveis, pastas padrão, envio seguro de PDF
+│   ├── abas-orquestra.php    Abas Membros / Maestros / Chamada
 │   ├── header.php            Topo + menu lateral (muda conforme o perfil)
 │   └── footer.php            Rodapé
 ├── config/database.php       Conexão SQLite + funções de apoio (e, dinheiro, nomeMes...)
+├── database/partituras/      PDFs do acervo (nome aleatório; fora do Git)
 ├── sql/
 │   ├── schema.sql            Criação das tabelas
 │   └── dados_ficticios.php   Dados de demonstração
