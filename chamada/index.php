@@ -2,7 +2,7 @@
 /**
  * Chamada: o professor marca quem veio e quem faltou nas aulas de um dia.
  * - Por padrão abre o dia de hoje; dá para voltar dias para lançar chamada atrasada.
- * - A secretaria também pode lançar/corrigir (por exemplo, se o professor esqueceu).
+ * - O admin também pode lançar/corrigir (por exemplo, se o professor esqueceu).
  */
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/consultas.php';
@@ -19,7 +19,7 @@ if (!$dt || $data > date('Y-m-d')) {
 }
 $diaSemana = (int) $dt->format('N');
 
-$professorId = ehSecretaria() ? ((int) ($_GET['professor'] ?? 0) ?: null) : (int) $usuario['id'];
+$professorId = ehAdmin() ? ((int) ($_GET['professor'] ?? 0) ?: null) : (int) $usuario['id'];
 $aulas = aulasDoDia($diaSemana, $professorId);
 
 // Salvar chamada
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $salvar->execute([$matriculaId, $data, (int) $valor, $obs ?: null]);
         $salvas++;
     }
-    header('Location: index.php?data=' . $data . ($professorId && ehSecretaria() ? '&professor=' . $professorId : '') . '&salvas=' . $salvas);
+    header('Location: index.php?data=' . $data . ($professorId && ehAdmin() ? '&professor=' . $professorId : '') . '&salvas=' . $salvas);
     exit;
 }
 
@@ -58,7 +58,7 @@ if ($aulas) {
 
 $anterior = (clone $dt)->modify('-1 day')->format('Y-m-d');
 $proximo  = (clone $dt)->modify('+1 day')->format('Y-m-d');
-$filtroProf = $professorId && ehSecretaria() ? '&professor=' . $professorId : '';
+$filtroProf = $professorId && ehAdmin() ? '&professor=' . $professorId : '';
 
 $titulo = 'Chamada';
 $menu   = 'chamada';
@@ -92,7 +92,7 @@ require __DIR__ . '/../includes/header.php';
             <table class="tabela">
                 <thead>
                     <tr><th>Horário</th><th>Aluno</th><th>Instrumento</th>
-                        <?= ehSecretaria() ? '<th>Professor</th>' : '' ?>
+                        <?= ehAdmin() ? '<th>Professor</th>' : '' ?>
                         <th>Presença</th><th class="ocultar-celular">Observação</th></tr>
                 </thead>
                 <tbody>
@@ -102,7 +102,7 @@ require __DIR__ . '/../includes/header.php';
                         <td class="numero"><?= e($aula['hora_inicio']) ?></td>
                         <td><?= e($aula['aluno']) ?></td>
                         <td><span class="selo selo-instrumento"><?= e($aula['instrumento']) ?></span></td>
-                        <?php if (ehSecretaria()): ?><td><?= e($aula['professor']) ?></td><?php endif; ?>
+                        <?php if (ehAdmin()): ?><td><?= e($aula['professor']) ?></td><?php endif; ?>
                         <td>
                             <!-- Dois "botões" de rádio: só um pode ficar marcado -->
                             <div class="presenca">

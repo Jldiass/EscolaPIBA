@@ -17,7 +17,7 @@ if (!DateTime::createFromFormat('Y-m-d', $inicio) || !DateTime::createFromFormat
     [$inicio, $fim] = [date('Y-m-01'), date('Y-m-d')];
 }
 
-if (ehSecretaria()) {
+if (ehAdmin()) {
     $professorId = (int) ($_GET['professor'] ?? 0) ?: null;
     $professores = $pdo->query("SELECT id, nome FROM usuarios WHERE perfil = 'professor' AND ativo = 1 ORDER BY nome")->fetchAll();
 } else {
@@ -42,7 +42,7 @@ require __DIR__ . '/../includes/header.php';
         <p>De <?= date('d/m/Y', strtotime($inicio)) ?> até <?= date('d/m/Y', strtotime($fim)) ?></p>
     </div>
     <form method="get" class="acoes">
-        <?php if (ehSecretaria()): ?>
+        <?php if (ehAdmin()): ?>
             <select name="professor" class="select-simples">
                 <option value="">Todos os professores</option>
                 <?php foreach ($professores as $p): ?>
@@ -77,7 +77,7 @@ require __DIR__ . '/../includes/header.php';
 <section class="cartao">
     <table class="tabela">
         <thead>
-            <tr><th>Aluno</th><th>Instrumento</th><?= ehSecretaria() ? '<th class="ocultar-celular">Professor</th>' : '' ?>
+            <tr><th>Aluno</th><th>Instrumento</th><?= ehAdmin() ? '<th class="ocultar-celular">Professor</th>' : '' ?>
                 <th>Aulas</th><th>Presenças</th><th>Faltas</th><th>Frequência</th></tr>
         </thead>
         <tbody>
@@ -86,7 +86,7 @@ require __DIR__ . '/../includes/header.php';
             <tr>
                 <td><?= e($l['aluno']) ?> <?= $alerta ? '<span class="selo selo-falta">atenção</span>' : '' ?></td>
                 <td><span class="selo selo-instrumento"><?= e($l['instrumento']) ?></span></td>
-                <?php if (ehSecretaria()): ?><td class="ocultar-celular"><?= e($l['professor']) ?></td><?php endif; ?>
+                <?php if (ehAdmin()): ?><td class="ocultar-celular"><?= e($l['professor']) ?></td><?php endif; ?>
                 <td class="numero"><?= $l['aulas'] ?></td>
                 <td class="numero"><?= $l['presencas'] ?></td>
                 <td class="numero"><?= $l['faltas'] ?></td>

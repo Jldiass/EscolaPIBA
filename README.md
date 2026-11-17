@@ -1,17 +1,17 @@
 # 🎵 Música PIBA – EscolaPIBA
 
-Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **secretaria** e os **professores**:
+Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **administração (secretaria)** e os **professores**:
 
 - 👩‍🎓 **Alunos:** cadastro completo, ficha individual e matrícula com professor, dia, horário e mensalidade
 - 🎻 **Professores:** cada um com o próprio **login** e as suas **especialidades** (violino, viola, teoria musical, bateria…)
-- 🗓 **Agenda semanal:** cada professor vê as aulas da semana dele; a secretaria vê a de todos
+- 🗓 **Agenda semanal:** cada professor vê as aulas da semana dele; o admin vê a de todos
 - ✓ **Chamada:** o professor marca presença ou falta em cada aula
 - 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
 - 💰 **Financeiro:** quanto cada professor recebe pelos seus alunos e **quem já repassou** a parte da escola no mês
 
 Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e Difusão Cultural**, curso de Ciência da Computação (Anhanguera).
 
-![Painel da secretaria](docs/img/02-painel-secretaria.png)
+![Painel do administrador](docs/img/02-painel-secretaria.png)
 
 ## Como rodar
 
@@ -33,18 +33,19 @@ Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com d
 
 | Login | Perfil | O que vê |
 |---|---|---|
-| `secretaria` | Secretaria | Tudo: alunos, professores, agenda geral, chamada, frequência e financeiro |
+| **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, chamadas, vê frequência e financeiro |
 | `thiago` | Professor de Violino | Só os alunos e a agenda dele |
 | `geovana` | Professora de Viola | Só os alunos e a agenda dela |
 | `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |
 
-> ⚠️ Antes de usar de verdade na escola, troque as senhas de todos (Professores → Editar) e apague o arquivo `database/escola.sqlite` de demonstração.
+> ⚠️ Antes de usar de verdade na escola: apague o arquivo `database/escola.sqlite` de demonstração, entre como `admin` e troque a senha no botão 🔑 (canto inferior esquerdo). As senhas dos professores são trocadas em **Professores → Editar**, ou por eles mesmos no 🔑.
 
 ## Tecnologias
 
 | Camada | Tecnologia |
 |---|---|
-| Telas | HTML5 + CSS3 (sem framework) |
+| Telas | HTML5 + CSS3 (sem framework) + JavaScript |
+| Animação 3D do painel | Three.js r128 (guardado em `assets/js/vendor`, funciona sem internet) |
 | Lógica no servidor | PHP 8 |
 | Banco de dados | SQLite, acessado com PDO |
 | Login | Sessão PHP + senhas com `password_hash` |

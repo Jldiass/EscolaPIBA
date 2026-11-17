@@ -6,7 +6,7 @@
  *   $titulo  -> texto do título da página
  *   $menu    -> qual item do menu fica destacado ('inicio', 'alunos', ...)
  *
- * O menu muda conforme o perfil: a secretaria vê tudo, o professor
+ * O menu muda conforme o perfil: o admin vê tudo, o professor
  * vê só o que é dele.
  */
 require_once __DIR__ . '/auth.php';
@@ -16,12 +16,12 @@ $menu    = $menu ?? '';
 $raiz    = raizUrl();
 $usuario = usuarioAtual();
 
-// Itens do menu: [chave, texto, link, ícone, só secretaria?]
+// Itens do menu: [chave, texto, link, ícone, só admin?]
 // Um item com link null é um título de grupo.
 $itensMenu = [
     ['inicio',      'Início',       'index.php',              '♪',  false],
     ['grupo',       'Escola',       null,                     '',   false],
-    ['alunos',      ehSecretaria() ? 'Alunos' : 'Meus alunos', 'alunos/index.php', '♫', false],
+    ['alunos',      ehAdmin() ? 'Alunos' : 'Meus alunos', 'alunos/index.php', '♫', false],
     ['professores', 'Professores',  'professores/index.php',  '𝄞',  true],
     ['grupo',       'Aulas',        null,                     '',   false],
     ['agenda',      'Agenda',       'agenda.php',             '🗓', false],
@@ -38,7 +38,7 @@ $itensMenu = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($titulo) ?> · Música PIBA</title>
     <link rel="icon" href="<?= $raiz ?>assets/img/logo-piba.png">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
     <link rel="stylesheet" href="<?= $raiz ?>assets/css/style.css">
 </head>
 <body>
@@ -52,7 +52,7 @@ $itensMenu = [
 
         <nav>
             <?php foreach ($itensMenu as [$chave, $texto, $link, $icone, $soSecretaria]): ?>
-                <?php if ($soSecretaria && !ehSecretaria()) continue; ?>
+                <?php if ($soSecretaria && !ehAdmin()) continue; ?>
                 <?php if ($link === null): ?>
                     <div class="grupo-menu"><?= $texto ?></div>
                     <?php continue; ?>
@@ -69,9 +69,12 @@ $itensMenu = [
             <div class="usuario">
                 <div>
                     <b><?= e($usuario['nome']) ?></b>
-                    <small><?= $usuario['perfil'] === 'secretaria' ? 'Secretaria' : 'Professor(a)' ?></small>
+                    <small><?= $usuario['perfil'] === 'admin' ? 'Administrador' : 'Professor(a)' ?></small>
                 </div>
-                <a class="botao botao-pequeno" href="<?= $raiz ?>logout.php">Sair</a>
+                <div class="acoes">
+                    <a class="botao botao-pequeno" href="<?= $raiz ?>conta.php" title="Trocar minha senha">🔑</a>
+                    <a class="botao botao-pequeno" href="<?= $raiz ?>logout.php">Sair</a>
+                </div>
             </div>
         <?php endif; ?>
     </aside>

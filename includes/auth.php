@@ -7,7 +7,7 @@
  * ao navegador daquela pessoa, por meio de um cookie.
  *
  * Toda página protegida começa chamando exigirLogin() ou
- * exigirSecretaria(). Se a pessoa não tiver permissão, ela é
+ * exigirAdmin(). Se a pessoa não tiver permissão, ela é
  * mandada para a tela de login.
  */
 require_once __DIR__ . '/../config/database.php';
@@ -32,9 +32,9 @@ function usuarioAtual(): ?array
     return $usuario;
 }
 
-function ehSecretaria(): bool
+function ehAdmin(): bool
 {
-    return (usuarioAtual()['perfil'] ?? '') === 'secretaria';
+    return (usuarioAtual()['perfil'] ?? '') === 'admin';
 }
 
 /** Bloqueia a página para quem não fez login. */
@@ -48,13 +48,13 @@ function exigirLogin(): array
     return $usuario;
 }
 
-/** Bloqueia a página para quem não é da secretaria. */
-function exigirSecretaria(): array
+/** Bloqueia a página para quem não é admin. */
+function exigirAdmin(): array
 {
     $usuario = exigirLogin();
-    if ($usuario['perfil'] !== 'secretaria') {
+    if ($usuario['perfil'] !== 'admin') {
         http_response_code(403);
-        exit('Acesso permitido somente à secretaria.');
+        exit('Acesso permitido somente ao administrador.');
     }
     return $usuario;
 }

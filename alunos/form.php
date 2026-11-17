@@ -10,7 +10,7 @@
  */
 require __DIR__ . '/../includes/auth.php';
 
-exigirSecretaria(); // só a secretaria cadastra e edita alunos
+exigirAdmin(); // só o admin cadastra e edita alunos
 $pdo = conectar();
 
 // Instrumentos/especialidades ensinados hoje na escola
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'INSERT INTO alunos (nome, data_nascimento, responsavel, telefone, instrumento, ativo)
                  VALUES (:nome, :data_nascimento, :responsavel, :telefone, :instrumento, :ativo)'
             )->execute($dados);
-            // Vai direto para a ficha do aluno, onde a secretaria faz a matrícula
+            // Vai direto para a ficha do aluno, onde o admin faz a matrícula
             header('Location: ver.php?id=' . $pdo->lastInsertId() . '&msg=criado');
             exit;
         }

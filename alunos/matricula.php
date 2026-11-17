@@ -1,13 +1,13 @@
 <?php
 /**
- * Ações de matrícula (só secretaria, só POST):
+ * Ações de matrícula (só admin, só POST):
  *   acao=criar     -> nova matrícula do aluno com um professor
  *   acao=encerrar  -> encerra (não apaga: o histórico de chamadas continua)
  *   acao=reativar  -> volta a matrícula para ativa
  */
 require __DIR__ . '/../includes/auth.php';
 
-exigirSecretaria();
+exigirAdmin();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit;

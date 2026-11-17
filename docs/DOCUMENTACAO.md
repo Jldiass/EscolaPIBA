@@ -4,18 +4,19 @@
 
 O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIBA. Antes, cadastros, horários, chamadas e o controle do dinheiro ficavam em cadernos e mensagens. Com o sistema, tudo isso fica em um só lugar:
 
-- a **secretaria** cadastra alunos e professores, faz as matrículas e acompanha o financeiro;
+- o **administrador** (secretaria) cadastra alunos, professores e outros administradores, faz as matrículas e acompanha o financeiro;
 - cada **professor** entra com o próprio login, vê seus alunos e sua agenda da semana e faz a chamada.
 
 ## 2. Perfis de acesso
 
-| Recurso | Secretaria | Professor |
+| Recurso | Administrador | Professor |
 |---|:---:|:---:|
 | Painel inicial | Escola toda | Só os dados dele |
 | Ver alunos | Todos | Só os matriculados com ele |
 | Cadastrar, editar e excluir alunos | ✅ | ❌ |
 | Matricular aluno com professor | ✅ | ❌ |
-| Cadastrar professores e definir logins | ✅ | ❌ |
+| Cadastrar professores e administradores, definir logins | ✅ | ❌ |
+| Trocar a própria senha (🔑) | ✅ | ✅ |
 | Agenda semanal | De todos, com filtro | A dele |
 | Fazer chamada | De qualquer aula | Das aulas dele |
 | Relatório de frequência | Todos | Alunos dele |
@@ -31,7 +32,9 @@ Cada professor tem uma ou mais **especialidades**. A matrícula do aluno é semp
 | Geovana | Viola | `geovana` |
 | Pastor Elias (Ministro de Música) | Teoria musical, Bateria | `elias` |
 
-Novos professores e especialidades são cadastrados pela secretaria, em **Professores → + Novo professor**.
+Novos professores e especialidades são cadastrados pelo administrador, em **Professores → + Novo professor**. Outros administradores (por exemplo, alguém da secretaria) entram em **Professores → + Novo administrador**.
+
+Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no primeiro acesso).
 
 ## 4. Requisitos
 
@@ -39,7 +42,7 @@ Novos professores e especialidades são cadastrados pela secretaria, em **Profes
 
 | Código | Requisito |
 |---|---|
-| RF01 | Login com usuário e senha; dois perfis: secretaria e professor |
+| RF01 | Login com usuário e senha; dois perfis: administrador e professor |
 | RF02 | Cadastrar, editar, buscar e excluir alunos (nome, nascimento, responsável, telefone, instrumento) |
 | RF03 | Exigir responsável para aluno menor de 18 anos |
 | RF04 | Cadastrar professores com login, senha e especialidades; desativar sem apagar o histórico |
@@ -50,7 +53,8 @@ Novos professores e especialidades são cadastrados pela secretaria, em **Profes
 | RF09 | Calcular a frequência de cada aluno em um período e destacar quem está abaixo de 75% |
 | RF10 | Calcular, por mês, quanto cada professor recebe e quanto deve repassar à escola |
 | RF11 | Registrar e desfazer o repasse de cada professor no mês; mostrar quem está pendente |
-| RF12 | Permitir que a secretaria ajuste o percentual da escola |
+| RF12 | Permitir que o administrador ajuste o percentual da escola |
+| RF13 | Cada usuário pode trocar a própria senha; o administrador não pode remover o próprio acesso |
 
 ### Requisitos não funcionais
 
@@ -75,13 +79,13 @@ professor recebe          = total − parte da escola
 
 Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100) + 2 de teoria (R$ 50) = **R$ 300**. A escola fica com 30% = **R$ 90**, e ele recebe **R$ 210**.
 
-**Situação do repasse.** No mês escolhido, cada professor aparece como **Pendente** até a secretaria clicar em **Registrar repasse**. Depois fica **Repassado**, com a data e o valor. Um registro feito por engano pode ser desfeito.
+**Situação do repasse.** No mês escolhido, cada professor aparece como **Pendente** até o administrador clicar em **Registrar repasse**. Depois fica **Repassado**, com a data e o valor. Um registro feito por engano pode ser desfeito.
 
 **Frequência.** `frequência = presenças ÷ aulas com chamada × 100`. Abaixo de **75%** o aluno aparece com o selo "atenção", para a escola procurar a família antes que ele desista.
 
 **Conflito de horário.** Duas aulas do mesmo professor se sobrepõem quando uma começa antes de a outra terminar. Nesse caso a matrícula é recusada.
 
-**Exclusões.** Matrículas e professores são **encerrados/desativados**, não apagados, para não perder o histórico de chamadas e repasses. Só o aluno pode ser excluído de vez, pela secretaria.
+**Exclusões.** Matrículas e professores são **encerrados/desativados**, não apagados, para não perder o histórico de chamadas e repasses. Só o aluno pode ser excluído de vez, pelo administrador.
 
 ## 6. Banco de dados
 
@@ -97,7 +101,7 @@ erDiagram
         text nome
         text login UK
         text senha_hash
-        text perfil "secretaria ou professor"
+        text perfil "admin ou professor"
         text instrumentos "especialidades"
         int ativo
     }
@@ -144,9 +148,9 @@ Há também a tabela `configuracoes` (chave/valor), que guarda o `percentual_esc
 ### Login
 ![Login](img/01-login.png)
 
-### Painel da secretaria
-Números da escola, repasses pendentes do mês e aulas do dia.
-![Painel da secretaria](img/02-painel-secretaria.png)
+### Painel do administrador
+Nota musical 3D girando, faixa de instrumentos, números da escola, repasses pendentes e aulas do dia.
+![Painel do administrador](img/02-painel-secretaria.png)
 
 ### Alunos
 Busca, filtro por especialidade e professores de cada aluno.
@@ -159,7 +163,7 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 ### Professores
 ![Professores](img/05-professores.png)
 
-### Agenda semanal (secretaria vê todos, uma cor por professor)
+### Agenda semanal (administrador vê todos, uma cor por professor)
 ![Agenda geral](img/06-agenda-geral.png)
 
 ### Chamada
@@ -176,7 +180,17 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 ![Alunos de bateria](img/11-alunos-de-bateria.png)
 ![Agenda do professor](img/12-agenda-professor.png)
 
-## 8. Segurança e privacidade
+## 8. Identidade visual
+
+Segue o guia de estilo do Mundo 3D, adaptado para música:
+
+- **Fundo claro e minimalista**, com cor só nos detalhes; botões e pílulas com raio de 99px; cards de 12 a 18px com sombra suave.
+- **Cores de destaque:** laranja `#ff6b2c`, rosa `#ff4fa3`, violeta `#7b5cff`, azul `#2f8cff`, verde-água `#00b8a9`, amarelo `#ffc93c`, verde `#1fa463`, com fundos pastel nos indicadores.
+- **Degradê arco-íris** na barra do topo do menu, no nome "PIBA", nas barras de frequência e na borda do dia de hoje na agenda.
+- **Fontes:** Inter Tight (títulos), Inter (texto) e JetBrains Mono (horários, valores e etiquetas).
+- **Animações:** nota musical 3D em Three.js no painel; cartões que aparecem subindo ao rolar (IntersectionObserver); ícones flutuando; faixa de instrumentos rolando; entradas com "quique"; avatares com anel girando. Quem ativa "reduzir movimento" no sistema operacional vê tudo parado.
+
+## 9. Segurança e privacidade
 
 | Medida | Protege contra |
 |---|---|
@@ -185,10 +199,10 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 | Consultas preparadas (PDO) em tudo que vem do usuário | SQL Injection |
 | `htmlspecialchars` em todo texto exibido | XSS (scripts maliciosos) |
 | Código CSRF em todos os formulários | Formulários enviados por outros sites |
-| Checagem de perfil em cada página (`exigirLogin` / `exigirSecretaria`) | Professor acessar dados da secretaria ou de outro professor |
+| Checagem de perfil em cada página (`exigirLogin` / `exigirAdmin`) | Professor acessar dados da administração ou de outro professor |
 | Banco fora do Git + alunos fictícios no repositório | Exposição de dados pessoais (LGPD) |
 
-## 9. Limitações e próximos passos
+## 10. Limitações e próximos passos
 
 - A mensalidade é a **atual** de cada matrícula. Se um valor mudar no meio do ano, os meses anteriores passam a mostrar o valor novo. Uma melhoria futura é guardar o histórico de valores.
 - O sistema não controla se o **aluno** pagou o professor, só o repasse do professor para a escola.

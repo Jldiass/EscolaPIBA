@@ -6,7 +6,7 @@
  * por password_hash() antes de ir para o banco.
  *
  * Logins de teste (senha de todos: piba123):
- *   secretaria  -> perfil secretaria (vê tudo)
+ *   admin       -> ADMINISTRADOR: cadastra e vê tudo (alunos, professores, financeiro...)
  *   thiago      -> professor de Violino
  *   geovana     -> professora de Viola
  *   elias       -> Pastor Elias, Ministro de Música: Teoria musical e Bateria
@@ -23,7 +23,7 @@ function inserirDadosFicticios(PDO $pdo): void
         'INSERT INTO usuarios (nome, login, senha_hash, perfil, telefone, instrumentos)
          VALUES (?, ?, ?, ?, ?, ?)'
     );
-    $usuario->execute(['Secretaria da Escola', 'secretaria', $senha, 'secretaria', '(00) 90000-1000', null]);
+    $usuario->execute(['Administração', 'admin', $senha, 'admin', null, null]);
     // Professores da escola, cada um com sua(s) especialidade(s)
     $usuario->execute(['Thiago',        'thiago', $senha, 'professor', null, 'Violino']);
     $thiago = $pdo->lastInsertId();

@@ -2,7 +2,7 @@
 /**
  * Ficha do aluno: dados pessoais, matrículas (professor, horário,
  * mensalidade) e frequência de cada matrícula.
- * A secretaria também matricula o aluno com um professor aqui.
+ * O admin também matricula o aluno com um professor aqui.
  */
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/consultas.php';
@@ -32,7 +32,7 @@ $stmt->execute([$id]);
 $matriculas = $stmt->fetchAll();
 
 // Professor só pode ver alunos que estudam com ele
-if (!ehSecretaria() && !in_array($usuario['id'], array_column($matriculas, 'professor_id'))) {
+if (!ehAdmin() && !in_array($usuario['id'], array_column($matriculas, 'professor_id'))) {
     http_response_code(403);
     exit('Este aluno não está matriculado com você.');
 }
@@ -69,7 +69,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
     <div class="acoes">
         <a class="botao" href="index.php">← Voltar</a>
-        <?php if (ehSecretaria()): ?>
+        <?php if (ehAdmin()): ?>
             <a class="botao" href="form.php?id=<?= $id ?>">Editar dados</a>
         <?php endif; ?>
     </div>
@@ -108,7 +108,7 @@ require __DIR__ . '/../includes/header.php';
 <section class="cartao" style="margin-top: 18px">
     <h2>Matrículas e horários</h2>
     <?php if (!$matriculas): ?>
-        <p class="vazio">Ainda sem matrícula. <?= ehSecretaria() ? 'Use o formulário abaixo.' : '' ?></p>
+        <p class="vazio">Ainda sem matrícula. <?= ehAdmin() ? 'Use o formulário abaixo.' : '' ?></p>
     <?php else: ?>
         <table class="tabela">
             <thead>
@@ -128,7 +128,7 @@ require __DIR__ . '/../includes/header.php';
                         <small class="suave">(<?= $m['presencas'] ?>/<?= $m['aulas'] ?>)</small></td>
                     <td><?= $m['ativo'] ? '<span class="selo selo-ativo">Ativa</span>' : '<span class="selo selo-inativo">Encerrada</span>' ?></td>
                     <td>
-                        <?php if (ehSecretaria()): ?>
+                        <?php if (ehAdmin()): ?>
                             <form method="post" action="matricula.php" class="acoes">
                                 <?= campoCsrf() ?>
                                 <input type="hidden" name="matricula_id" value="<?= $m['id'] ?>">
@@ -148,7 +148,7 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 </section>
 
-<?php if (ehSecretaria()): ?>
+<?php if (ehAdmin()): ?>
 <section class="cartao" style="margin-top: 18px">
     <h2>+ Nova matrícula</h2>
     <p class="suave">Liga o aluno a um professor, com o dia e horário fixo da aula e o valor da mensalidade.</p>

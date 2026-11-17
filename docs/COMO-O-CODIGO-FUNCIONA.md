@@ -18,6 +18,7 @@ Ao clicar em **Salvar**, o formulário é enviado por **POST** para a mesma pág
 EscolaPIBA/
 ├── index.php                 Painel inicial (muda conforme o perfil)
 ├── login.php / logout.php    Entrar e sair
+├── conta.php                 Trocar a própria senha
 ├── agenda.php                Calendário semanal
 ├── alunos/
 │   ├── index.php             Lista + busca + filtro por especialidade
@@ -26,8 +27,8 @@ EscolaPIBA/
 │   ├── matricula.php         Cria / encerra / reativa matrícula (só recebe POST)
 │   └── excluir.php           Exclui aluno (só recebe POST)
 ├── professores/
-│   ├── index.php             Cartões dos professores
-│   └── form.php              Cadastrar / editar professor, login e senha
+│   ├── index.php             Cartões dos professores + lista de administradores
+│   └── form.php              Cadastrar / editar professor ou administrador, login e senha
 ├── chamada/
 │   ├── index.php             Chamada do dia
 │   └── frequencia.php        Relatório de frequência
@@ -41,7 +42,10 @@ EscolaPIBA/
 ├── sql/
 │   ├── schema.sql            Criação das tabelas
 │   └── dados_ficticios.php   Dados de demonstração
-├── assets/css/style.css      Todo o visual
+├── assets/css/style.css      Todo o visual (cores, fontes, animações)
+├── assets/js/app.js          Cartões aparecendo ao rolar (IntersectionObserver)
+├── assets/js/nota3d.js       Nota musical 3D do painel (Three.js)
+├── assets/js/vendor/         Biblioteca Three.js (cópia local)
 └── assets/img/logo-piba.png  Logo da igreja
 ```
 
@@ -57,11 +61,11 @@ A tabela mais importante é **`matriculas`**: ela liga **aluno + professor + esp
 - Toda página começa com uma destas linhas:
   ```php
   $usuario = exigirLogin();      // qualquer pessoa logada
-  exigirSecretaria();            // só a secretaria
+  exigirAdmin();                 // só o administrador
   ```
 - Para o professor ver **só o que é dele**, as consultas recebem o id dele:
   ```php
-  $professorId = ehSecretaria() ? null : (int) $usuario['id'];
+  $professorId = ehAdmin() ? null : (int) $usuario['id'];
   $aulas = aulasDoDia($diaSemana, $professorId);
   ```
 
@@ -97,7 +101,17 @@ ON CONFLICT (matricula_id, data) DO UPDATE SET presente = excluded.presente
 
 **Professor + especialidade em um só campo** (`alunos/ver.php`): o select envia `"4|Bateria"` e o PHP separa com `explode('|', ...)`.
 
-## 7. Segurança
+## 7. A nota musical 3D (`assets/js/nota3d.js`)
+
+Feita com **Three.js**: uma *cena*, uma *câmera* e um *renderizador* desenham objetos 3D num `<canvas>`.
+
+- **Cabeça:** `SphereGeometry` achatada com `scale.set(1.3, 0.95, 0.9)`.
+- **Haste:** `CylinderGeometry` fino.
+- **Bandeira:** `TubeGeometry` seguindo uma curva de Bézier.
+- **Animação:** `requestAnimationFrame` chama `animar()` cerca de 60 vezes por segundo. A cada vez, a nota gira um pouco (`rotation.y`) e sobe/desce com `Math.sin` (efeito de flutuar).
+- Se o Three.js não carregar, aparece um ♪ simples no lugar. A página nunca quebra.
+
+## 8. Segurança
 
 | Cuidado | Onde |
 |---|---|
@@ -105,15 +119,15 @@ ON CONFLICT (matricula_id, data) DO UPDATE SET presente = excluded.presente
 | `e()` = `htmlspecialchars` | Todo texto mostrado na tela |
 | `campoCsrf()` + `verificarCsrf()` | Todos os formulários POST |
 | `password_hash` / `password_verify` | Cadastro de professor e login |
-| `exigirLogin()` / `exigirSecretaria()` | Topo de cada página |
+| `exigirLogin()` / `exigirAdmin()` | Topo de cada página |
 
-## 8. Exercícios para você fazer (e commitar!)
+## 9. Exercícios para você fazer (e commitar!)
 
 1. **Fácil:** mude o percentual padrão da escola em `sql/dados_ficticios.php` e veja o financeiro mudar (apague `database/escola.sqlite` antes de testar).
 2. **Fácil:** acrescente "Canto" à lista `$instrumentos` em `alunos/form.php`.
 3. **Médio:** em `chamada/frequencia.php`, troque a constante `FREQUENCIA_MINIMA` para 80 e explique o efeito.
 4. **Médio:** no painel do professor (`index.php`), mostre um quarto cartão com quanto ele vai receber no mês. Dica: use `resumoFinanceiro(date('Y-m'))` e procure a linha com o `id` dele.
-5. **Desafio:** crie uma tela para a secretaria **trocar a própria senha**.
+5. **Desafio:** em `assets/js/nota3d.js`, troque as cores da nota ou acrescente uma segunda nota girando ao lado.
 
 Depois de cada mudança:
 ```

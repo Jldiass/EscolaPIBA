@@ -13,7 +13,7 @@ require __DIR__ . '/includes/consultas.php';
 $usuario = exigirLogin();
 $pdo = conectar();
 
-if (ehSecretaria()) {
+if (ehAdmin()) {
     $professorId = (int) ($_GET['professor'] ?? 0) ?: null;
     $professores = $pdo->query("SELECT id, nome FROM usuarios WHERE perfil = 'professor' AND ativo = 1 ORDER BY nome")->fetchAll();
 } else {
@@ -39,7 +39,7 @@ if (!$semana[7]['aulas']) {
 $cores = ['#e8b54a', '#5aa9e6', '#b2445c', '#3fbf7f', '#a78bfa', '#f97316'];
 
 $totalAulas = array_sum(array_map(fn($d) => count($d['aulas']), $semana));
-$urlSemana = fn(int $s) => '?semana=' . $s . ($professorId && ehSecretaria() ? '&professor=' . $professorId : '');
+$urlSemana = fn(int $s) => '?semana=' . $s . ($professorId && ehAdmin() ? '&professor=' . $professorId : '');
 
 $titulo = 'Agenda';
 $menu   = 'agenda';
@@ -52,7 +52,7 @@ require __DIR__ . '/includes/header.php';
         <p><?= $segunda->format('d/m') ?> a <?= (clone $segunda)->modify('+6 day')->format('d/m/Y') ?> · <?= $totalAulas ?> aula(s)</p>
     </div>
     <div class="acoes">
-        <?php if (ehSecretaria()): ?>
+        <?php if (ehAdmin()): ?>
             <form method="get">
                 <input type="hidden" name="semana" value="<?= $deslocamento ?>">
                 <select name="professor" onchange="this.form.submit()" class="select-simples">
@@ -86,7 +86,7 @@ require __DIR__ . '/includes/header.php';
                     <span class="aula-hora"><?= e($aula['hora_inicio']) ?> – <?= e($aula['hora_fim']) ?></span>
                     <b><?= e($aula['aluno']) ?></b>
                     <span><?= e($aula['instrumento']) ?></span>
-                    <?php if (ehSecretaria()): ?><small><?= e($aula['professor']) ?></small><?php endif; ?>
+                    <?php if (ehAdmin()): ?><small><?= e($aula['professor']) ?></small><?php endif; ?>
                 </a>
             <?php endforeach; ?>
         </section>

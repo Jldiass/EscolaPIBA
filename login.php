@@ -35,14 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrar · Música PIBA</title>
     <link rel="icon" href="assets/img/logo-piba.png">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="tela-login">
+    <div class="bolhas" aria-hidden="true"><i></i><i></i><i></i></div>
     <form class="cartao caixa-login" method="post">
         <img src="assets/img/logo-piba.png" alt="Logo da PIBA">
-        <h1>Música<b>PIBA</b></h1>
-        <p>Escola de Música · acesso da secretaria e dos professores</p>
+        <h1>Música<b class="destaque">PIBA</b></h1>
+        <p>Escola de Música · acesso da administração e dos professores</p>
 
         <?php if ($erro): ?>
             <div class="alerta alerta-erro"><?= e($erro) ?></div>

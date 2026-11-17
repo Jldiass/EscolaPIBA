@@ -12,8 +12,8 @@ $pdo = conectar();
 $busca = trim($_GET['busca'] ?? '');
 $esp   = trim($_GET['esp'] ?? '');   // filtro por especialidade (Bateria, Teoria musical...)
 
-// Especialidades que aparecem nos filtros: a secretaria vê todas, o professor só as dele
-if (ehSecretaria()) {
+// Especialidades que aparecem nos filtros: o admin vê todas, o professor só as dele
+if (ehAdmin()) {
     $especialidades = $pdo->query('SELECT DISTINCT instrumento FROM matriculas WHERE ativo = 1 ORDER BY instrumento')
                           ->fetchAll(PDO::FETCH_COLUMN);
 } else {
@@ -28,7 +28,7 @@ $sql = "SELECT a.*, group_concat(DISTINCT u.nome) AS professores
         WHERE 1 = 1";
 $params = [];
 
-if (!ehSecretaria()) {
+if (!ehAdmin()) {
     // Professor: só alunos que têm matrícula ativa com ele
     $sql .= ' AND a.id IN (SELECT aluno_id FROM matriculas WHERE professor_id = :prof AND ativo = 1)';
     $params[':prof'] = $usuario['id'];
@@ -41,9 +41,9 @@ if ($busca !== '') {
 if ($esp !== '') {
     // Só alunos com matrícula ativa nessa especialidade (e, se for professor, com ele)
     $sql .= ' AND a.id IN (SELECT aluno_id FROM matriculas WHERE ativo = 1 AND instrumento = :esp'
-          . (ehSecretaria() ? '' : ' AND professor_id = :prof2') . ')';
+          . (ehAdmin() ? '' : ' AND professor_id = :prof2') . ')';
     $params[':esp'] = $esp;
-    if (!ehSecretaria()) {
+    if (!ehAdmin()) {
         $params[':prof2'] = $usuario['id'];
     }
 }
@@ -69,7 +69,7 @@ function idade(?string $nascimento): string
     return (new DateTime($nascimento))->diff(new DateTime())->y . ' anos';
 }
 
-$titulo = ehSecretaria() ? 'Alunos' : 'Meus alunos';
+$titulo = ehAdmin() ? 'Alunos' : 'Meus alunos';
 $menu   = 'alunos';
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -79,7 +79,7 @@ require __DIR__ . '/../includes/header.php';
         <h1>♫ <?= $titulo ?></h1>
         <p><?= count($alunos) ?> aluno(s) encontrado(s)</p>
     </div>
-    <?php if (ehSecretaria()): ?>
+    <?php if (ehAdmin()): ?>
         <a class="botao botao-primario" href="form.php">+ Novo aluno</a>
     <?php endif; ?>
 </div>
@@ -119,7 +119,7 @@ require __DIR__ . '/../includes/header.php';
                     <th>Instrumento</th>
                     <th class="ocultar-celular">Idade</th>
                     <th class="ocultar-celular">Responsável</th>
-                    <?php if (ehSecretaria()): ?><th class="ocultar-celular">Professor(es)</th><?php endif; ?>
+                    <?php if (ehAdmin()): ?><th class="ocultar-celular">Professor(es)</th><?php endif; ?>
                     <th>Situação</th>
                     <th></th>
                 </tr>
@@ -131,7 +131,7 @@ require __DIR__ . '/../includes/header.php';
                     <td><span class="selo selo-instrumento"><?= e($aluno['instrumento']) ?></span></td>
                     <td class="ocultar-celular"><?= idade($aluno['data_nascimento']) ?></td>
                     <td class="ocultar-celular"><?= e($aluno['responsavel'] ?: '-') ?></td>
-                    <?php if (ehSecretaria()): ?>
+                    <?php if (ehAdmin()): ?>
                         <td class="ocultar-celular"><?= $aluno['professores'] ? e($aluno['professores']) : '<span class="selo selo-pendente">Sem matrícula</span>' ?></td>
                     <?php endif; ?>
                     <td>
@@ -144,7 +144,7 @@ require __DIR__ . '/../includes/header.php';
                     <td>
                         <div class="acoes">
                             <a class="botao botao-pequeno" href="ver.php?id=<?= $aluno['id'] ?>">Ver</a>
-                            <?php if (ehSecretaria()): ?>
+                            <?php if (ehAdmin()): ?>
                                 <a class="botao botao-pequeno" href="form.php?id=<?= $aluno['id'] ?>">Editar</a>
                                 <!-- Excluir usa POST (formulário), nunca um link GET, para não apagar por acidente -->
                                 <form method="post" action="excluir.php" onsubmit="return confirm('Excluir este aluno e todo o histórico dele?');">

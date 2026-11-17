@@ -1,19 +1,19 @@
 <?php
 /**
- * Financeiro (só secretaria).
+ * Financeiro (só admin).
  *
  * Para o mês escolhido, mostra professor por professor:
  *   - quantos alunos ele tem e a soma das mensalidades;
  *   - quanto fica com o professor e quanto deve ser repassado à escola;
  *   - se ele JÁ REPASSOU ou se está PENDENTE.
  *
- * A secretaria registra o repasse quando o professor entrega o valor,
+ * O admin registra o repasse quando o professor entrega o valor,
  * e pode ajustar o percentual da escola.
  */
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/consultas.php';
 
-$usuario = exigirSecretaria();
+$usuario = exigirAdmin();
 $pdo = conectar();
 
 $mes = $_GET['mes'] ?? date('Y-m');

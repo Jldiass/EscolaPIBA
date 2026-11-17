@@ -1,7 +1,7 @@
 -- =============================================================
 -- Música PIBA - Estrutura do banco de dados (SQLite)
 --
---   usuarios    -> quem entra no sistema (secretaria e professores)
+--   usuarios    -> quem entra no sistema (administradores e professores)
 --   alunos      -> dados pessoais dos alunos
 --   matriculas  -> liga ALUNO + PROFESSOR + instrumento, com o
 --                  horário semanal da aula e o valor da mensalidade
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome        TEXT    NOT NULL,
     login       TEXT    NOT NULL UNIQUE,
     senha_hash  TEXT    NOT NULL,                 -- nunca guardamos a senha pura
-    perfil      TEXT    NOT NULL CHECK (perfil IN ('secretaria', 'professor')),
+    perfil      TEXT    NOT NULL CHECK (perfil IN ('admin', 'professor')), -- admin = secretaria/administração
     telefone    TEXT,
     instrumentos TEXT,                            -- o que o professor ensina
     ativo       INTEGER NOT NULL DEFAULT 1,
