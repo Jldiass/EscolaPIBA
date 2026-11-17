@@ -27,9 +27,9 @@ Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e 
    git clone https://github.com/Jldiass/EscolaPIBA.git
    cd EscolaPIBA
    ```
-3. Inicie o servidor:
+3. Inicie o servidor (os dois `-d` deixam enviar PDFs de partitura de até 20 MB):
    ```
-   php -S localhost:8000
+   php -d upload_max_filesize=20M -d post_max_size=25M -S localhost:8000
    ```
 4. Abra http://localhost:8000
 
