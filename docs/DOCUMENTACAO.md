@@ -183,6 +183,10 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 ### Professores
 ![Professores](img/05-professores.png)
 
+### Cadastro de professor (administrador)
+Nome, especialidades, telefone, login e senha. O mesmo formulário cadastra outro administrador.
+![Novo professor](img/18-novo-professor.png)
+
 ### Agenda semanal (administrador vê todos, uma cor por professor)
 ![Agenda geral](img/06-agenda-geral.png)
 
@@ -209,9 +213,24 @@ O administrador escolhe o tipo; o campo "válido até" só aparece para lembrete
 ![Novo aviso](img/14-novo-aviso.png)
 
 ### Área do professor (exemplo: Pastor Elias)
+Cada professor entra com o próprio login e só vê o que é dele. O menu não mostra Professores nem Financeiro.
+
+**Painel do professor:** alunos dele, aulas na semana, frequência dos últimos 30 dias e as aulas de hoje.
 ![Painel do professor](img/10-painel-professor.png)
+
+**Meus alunos:** separados por especialidade (aqui, os alunos de bateria).
 ![Alunos de bateria](img/11-alunos-de-bateria.png)
+
+**Agenda da semana:** só as aulas dele.
 ![Agenda do professor](img/12-agenda-professor.png)
+
+**Chamada:** é o professor quem marca presente ou faltou (veja a tela "Chamada do professor" acima).
+
+**Frequência dos alunos dele:** quem está abaixo de 75% aparece com o selo "atenção".
+![Frequência do professor](img/16-frequencia-professor.png)
+
+**Minha conta:** o professor troca a própria senha.
+![Trocar senha](img/17-conta-professor.png)
 
 ## 8. Identidade visual
 
