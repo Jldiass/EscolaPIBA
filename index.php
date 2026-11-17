@@ -5,6 +5,7 @@
  */
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/consultas.php';
+require __DIR__ . '/includes/avisos.php';
 
 $usuario = exigirLogin();
 $pdo = conectar();
@@ -13,6 +14,8 @@ $hoje = (int) date('N');               // 1 = segunda ... 7 = domingo
 $profFiltro = ehAdmin() ? null : (int) $usuario['id'];
 $aulasHoje = aulasDoDia($hoje, $profFiltro);
 $mesAtual = date('Y-m');
+$lembretes = lembretesAtivos();
+$eventos   = proximosEventos(4);
 
 if (ehAdmin()) {
     $alunosAtivos = $pdo->query('SELECT COUNT(*) FROM alunos WHERE ativo = 1')->fetchColumn();
@@ -127,6 +130,28 @@ require __DIR__ . '/includes/header.php';
             <?php endforeach; ?>
             </tbody>
         </table>
+    <?php endif; ?>
+</section>
+
+<section class="cartao" style="margin-top: 16px">
+    <div class="topo">
+        <h2>📣 Avisos</h2>
+        <a class="botao botao-pequeno" href="avisos/index.php">Ver todos</a>
+    </div>
+    <?php if (!$lembretes && !$eventos): ?>
+        <p class="vazio">Nenhum aviso no momento.</p>
+    <?php else: ?>
+        <ul class="avisos-painel">
+            <?php foreach ($lembretes as $l): ?>
+                <li><span class="selo selo-lembrete">📌 Lembrete</span> <b><?= e($l['titulo']) ?></b>
+                    <?= $l['valido_ate'] ? '<small class="suave">até ' . date('d/m', strtotime($l['valido_ate'])) . '</small>' : '' ?></li>
+            <?php endforeach; ?>
+            <?php foreach ($eventos as $ev): ?>
+                <?php [$nomeTipo, $icone, $classe] = TIPOS_AVISO[$ev['tipo']]; ?>
+                <li><span class="selo <?= $classe ?>"><?= $icone ?> <?= $nomeTipo ?></span> <b><?= e($ev['titulo']) ?></b>
+                    <small class="suave"><?= date('d/m', strtotime($ev['data'])) ?><?= $ev['hora'] ? ' · ' . e($ev['hora']) : '' ?> · <?= quandoFalta($ev['data']) ?></small></li>
+            <?php endforeach; ?>
+        </ul>
     <?php endif; ?>
 </section>
 

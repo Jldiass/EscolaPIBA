@@ -33,9 +33,13 @@ EscolaPIBA/
 │   ├── index.php             Chamada do dia
 │   └── frequencia.php        Relatório de frequência
 ├── financeiro/index.php      Repasses do mês e percentual da escola
+├── avisos/
+│   ├── index.php             Lembretes, próximos eventos e histórico (admin exclui)
+│   └── form.php              Cadastrar / editar aviso (só admin)
 ├── includes/
 │   ├── auth.php              Login, sessão, permissões e proteção CSRF
 │   ├── consultas.php         Consultas reutilizadas (aulas do dia, financeiro, frequência)
+│   ├── avisos.php            Tipos de aviso e consultas (lembretes ativos, próximos eventos)
 │   ├── header.php            Topo + menu lateral (muda conforme o perfil)
 │   └── footer.php            Rodapé
 ├── config/database.php       Conexão SQLite + funções de apoio (e, dinheiro, nomeMes...)
@@ -97,6 +101,11 @@ WHERE professor_id = ? AND dia_semana = ? AND ativo = 1
 ```sql
 INSERT INTO presencas (matricula_id, data, presente, observacao) VALUES (?, ?, ?, ?)
 ON CONFLICT (matricula_id, data) DO UPDATE SET presente = excluded.presente
+```
+
+**Lembrete que some sozinho** (`includes/avisos.php`): não precisa de tarefa agendada. A própria consulta compara a validade com a data de hoje.
+```sql
+WHERE tipo = 'lembrete' AND (valido_ate IS NULL OR valido_ate >= date('now', 'localtime'))
 ```
 
 **Professor + especialidade em um só campo** (`alunos/ver.php`): o select envia `"4|Bateria"` e o PHP separa com `explode('|', ...)`.

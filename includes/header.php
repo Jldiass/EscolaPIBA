@@ -23,6 +23,7 @@ $itensMenu = [
     ['grupo',       'Escola',       null,                     '',   false],
     ['alunos',      ehAdmin() ? 'Alunos' : 'Meus alunos', 'alunos/index.php', '♫', false],
     ['professores', 'Professores',  'professores/index.php',  '𝄞',  true],
+    ['avisos',      'Avisos',       'avisos/index.php',       '📣', false],
     ['grupo',       'Aulas',        null,                     '',   false],
     ['agenda',      'Agenda',       'agenda.php',             '🗓', false],
     ['chamada',     'Chamada',      'chamada/index.php',      '✓',  false],

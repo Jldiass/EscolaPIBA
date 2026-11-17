@@ -8,6 +8,7 @@
 --   presencas   -> chamada: se o aluno veio ou faltou em cada aula
 --   repasses    -> valor que cada professor repassou à escola no mês
 --   configuracoes -> parâmetros da escola (ex.: % da escola)
+--   avisos      -> eventos sociais, eventos internos e lembretes
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -69,4 +70,18 @@ CREATE TABLE IF NOT EXISTS repasses (
 CREATE TABLE IF NOT EXISTS configuracoes (
     chave  TEXT PRIMARY KEY,
     valor  TEXT NOT NULL
+);
+
+-- Avisos: eventos (sociais e internos) e lembretes, cadastrados pelo admin
+CREATE TABLE IF NOT EXISTS avisos (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo        TEXT    NOT NULL CHECK (tipo IN ('social', 'interno', 'lembrete')),
+    titulo      TEXT    NOT NULL,
+    descricao   TEXT,
+    data        TEXT,              -- dia do evento, ou início do lembrete (AAAA-MM-DD)
+    hora        TEXT,              -- opcional, 'HH:MM'
+    local       TEXT,              -- opcional
+    valido_ate  TEXT,              -- lembrete: até quando aparece (vazio = até ser apagado)
+    criado_por  INTEGER REFERENCES usuarios(id),
+    criado_em   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );

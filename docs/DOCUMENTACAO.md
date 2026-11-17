@@ -21,6 +21,8 @@ O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIB
 | Fazer chamada | De qualquer aula | Das aulas dele |
 | Relatório de frequência | Todos | Alunos dele |
 | Financeiro e repasses | ✅ | ❌ |
+| Ver avisos (eventos e lembretes) | ✅ | ✅ |
+| Cadastrar, editar e excluir avisos | ✅ | ❌ |
 
 ## 3. Professores e especialidades
 
@@ -55,6 +57,7 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF11 | Registrar e desfazer o repasse de cada professor no mês; mostrar quem está pendente |
 | RF12 | Permitir que o administrador ajuste o percentual da escola |
 | RF13 | Cada usuário pode trocar a própria senha; o administrador não pode remover o próprio acesso |
+| RF14 | O administrador publica avisos: eventos sociais, eventos internos (com data, hora e local) e lembretes com validade (ex.: "não usar a sala 101"); todos os usuários veem os avisos e o painel mostra os próximos |
 
 ### Requisitos não funcionais
 
@@ -85,6 +88,8 @@ Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100) + 2 de teoria (R$ 50) =
 
 **Conflito de horário.** Duas aulas do mesmo professor se sobrepõem quando uma começa antes de a outra terminar. Nesse caso a matrícula é recusada.
 
+**Avisos.** Um evento (social ou interno) aparece em "Próximos eventos" até a data dele passar; depois vai para o histórico. Um lembrete começa na data informada e fica visível até a data "válido até" (em branco = até o administrador apagar).
+
 **Exclusões.** Matrículas e professores são **encerrados/desativados**, não apagados, para não perder o histórico de chamadas e repasses. Só o aluno pode ser excluído de vez, pelo administrador.
 
 ## 6. Banco de dados
@@ -95,6 +100,7 @@ erDiagram
     ALUNOS   ||--o{ MATRICULAS : "estuda"
     MATRICULAS ||--o{ PRESENCAS : "tem chamadas"
     USUARIOS ||--o{ REPASSES : "repassa"
+    USUARIOS ||--o{ AVISOS : "publica"
 
     USUARIOS {
         int id PK
@@ -139,6 +145,17 @@ erDiagram
         real valor
         text data_pagamento
     }
+    AVISOS {
+        int id PK
+        text tipo "social, interno ou lembrete"
+        text titulo
+        text descricao
+        text data
+        text hora
+        text local
+        text valido_ate "só lembrete"
+        int criado_por FK
+    }
 ```
 
 Há também a tabela `configuracoes` (chave/valor), que guarda o `percentual_escola`. O SQL completo está em [`sql/schema.sql`](../sql/schema.sql).
@@ -175,6 +192,14 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 ### Financeiro
 ![Financeiro](img/09-financeiro.png)
 
+### Avisos
+Lembretes ativos em amarelo e próximos eventos com a data em destaque, o tipo (social ou interno) e quanto tempo falta. Professores veem tudo, mas só o administrador edita.
+![Avisos](img/13-avisos.png)
+
+### Novo aviso
+O administrador escolhe o tipo; o campo "válido até" só aparece para lembrete.
+![Novo aviso](img/14-novo-aviso.png)
+
 ### Área do professor (exemplo: Pastor Elias)
 ![Painel do professor](img/10-painel-professor.png)
 ![Alunos de bateria](img/11-alunos-de-bateria.png)
@@ -206,4 +231,4 @@ Segue o guia de estilo do Mundo 3D, adaptado para música:
 
 - A mensalidade é a **atual** de cada matrícula. Se um valor mudar no meio do ano, os meses anteriores passam a mostrar o valor novo. Uma melhoria futura é guardar o histórico de valores.
 - O sistema não controla se o **aluno** pagou o professor, só o repasse do professor para a escola.
-- Ideias: notas e boletim, agenda de apresentações e recitais, aviso por WhatsApp de falta e exportar relatórios em PDF.
+- Ideias: notas e boletim, aviso por WhatsApp de falta e exportar relatórios em PDF.

@@ -68,6 +68,17 @@ function inserirDadosFicticios(PDO $pdo): void
         }
     }
 
+    // Avisos de exemplo: um evento social, um interno e um lembrete
+    $aviso = $pdo->prepare(
+        'INSERT INTO avisos (tipo, titulo, descricao, data, hora, local, valido_ate, criado_por) VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
+    );
+    $aviso->execute(['social', 'Recital de fim de ano', 'Apresentação dos alunos para as famílias e a comunidade.',
+                     date('Y-m-d', strtotime('+18 days')), '19:00', 'Templo principal', null]);
+    $aviso->execute(['interno', 'Reunião de professores', 'Planejamento do próximo semestre.',
+                     date('Y-m-d', strtotime('+5 days')), '20:00', 'Sala 102', null]);
+    $aviso->execute(['lembrete', 'Não usar a sala 101', 'Sala em reforma. As aulas foram para a sala 103.',
+                     date('Y-m-d'), null, 'Sala 101', date('Y-m-d', strtotime('+30 days'))]);
+
     // A escola fica com 30% da mensalidade; o professor fica com 70%
     $pdo->exec("INSERT INTO configuracoes (chave, valor) VALUES ('percentual_escola', '30')");
 

@@ -8,6 +8,7 @@ Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **a
 - ✓ **Chamada:** o professor marca presença ou falta em cada aula
 - 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
 - 💰 **Financeiro:** quanto cada professor recebe pelos seus alunos e **quem já repassou** a parte da escola no mês
+- 📣 **Avisos:** o administrador publica eventos sociais, eventos internos e lembretes (ex.: "não usar a sala 101"); todos veem e o painel mostra os próximos
 
 Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e Difusão Cultural**, curso de Ciência da Computação (Anhanguera).
 
@@ -33,7 +34,7 @@ Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com d
 
 | Login | Perfil | O que vê |
 |---|---|---|
-| **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, chamadas, vê frequência e financeiro |
+| **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, chamadas, publica avisos, vê frequência e financeiro |
 | `thiago` | Professor de Violino | Só os alunos e a agenda dele |
 | `geovana` | Professora de Viola | Só os alunos e a agenda dela |
 | `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |
