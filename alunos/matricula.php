@@ -4,6 +4,7 @@
  *   acao=criar     -> nova matrícula do aluno com um professor
  *   acao=encerrar  -> encerra (não apaga: o histórico de chamadas continua)
  *   acao=reativar  -> volta a matrícula para ativa
+ *   acao=bolsa     -> dá ou tira a bolsa da igreja (aluno bolsista não paga)
  */
 require __DIR__ . '/../includes/auth.php';
 
@@ -31,6 +32,12 @@ if ($acao === 'encerrar' || $acao === 'reativar') {
     voltar($alunoId, 'msg=' . ($acao === 'reativar' ? 'reativada' : 'encerrada'));
 }
 
+if ($acao === 'bolsa') {
+    $pdo->prepare('UPDATE matriculas SET bolsista = 1 - bolsista WHERE id = ? AND aluno_id = ?')
+        ->execute([(int) $_POST['matricula_id'], $alunoId]);
+    voltar($alunoId, 'msg=bolsa');
+}
+
 if ($acao === 'criar') {
     // O select manda "id|especialidade": explode() separa as duas partes
     [$professorId, $instrumento] = array_pad(explode('|', $_POST['professor_especialidade'] ?? '', 2), 2, '');
@@ -39,6 +46,7 @@ if ($acao === 'criar') {
     $inicio      = $_POST['hora_inicio'] ?? '';
     $fim         = $_POST['hora_fim'] ?? '';
     $mensalidade = (float) ($_POST['mensalidade'] ?? 0);
+    $bolsista    = !empty($_POST['bolsista']) ? 1 : 0;
 
     // Validações
     if (!$professorId || $instrumento === '' || $dia < 1 || $dia > 7) {
@@ -70,9 +78,9 @@ if ($acao === 'criar') {
     }
 
     $pdo->prepare(
-        'INSERT INTO matriculas (aluno_id, professor_id, instrumento, dia_semana, hora_inicio, hora_fim, mensalidade)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
-    )->execute([$alunoId, $professorId, $instrumento, $dia, $inicio, $fim, $mensalidade]);
+        'INSERT INTO matriculas (aluno_id, professor_id, instrumento, dia_semana, hora_inicio, hora_fim, mensalidade, bolsista)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    )->execute([$alunoId, $professorId, $instrumento, $dia, $inicio, $fim, $mensalidade, $bolsista]);
     voltar($alunoId, 'msg=matriculado');
 }
 

@@ -107,12 +107,12 @@ require __DIR__ . '/includes/header.php';
         <div class="valor"><?= $aulasSemana ?></div>
     </div>
     <?php if (ehAdmin()): ?>
-        <a class="cartao indicador" href="mensalidades/index.php">
+        <a class="cartao indicador" href="financeiro/mensalidades.php">
             <span class="icone">💳</span>
             <div class="rotulo">Alunos que não pagaram</div>
             <div class="valor <?= $inadimplentes ? 'texto-alerta' : '' ?>"><?= count($inadimplentes) ?></div>
         </a>
-        <a class="cartao indicador" href="financeiro/index.php">
+        <a class="cartao indicador" href="financeiro/repasses.php">
             <span class="icone">💰</span>
             <div class="rotulo">Repasses atrasados</div>
             <div class="valor <?= $repasses ? 'texto-alerta' : '' ?>"><?= count($repasses) ?></div>
@@ -123,7 +123,7 @@ require __DIR__ . '/includes/header.php';
             <div class="rotulo">Frequência (30 dias)</div>
             <div class="valor"><?= $freqMedia ?>%</div>
         </div>
-        <a class="cartao indicador" href="mensalidades/index.php">
+        <a class="cartao indicador" href="financeiro/mensalidades.php">
             <span class="icone">💳</span>
             <div class="rotulo">Mensalidades em aberto</div>
             <div class="valor <?= $inadimplentes ? 'texto-alerta' : '' ?>"><?= count($inadimplentes) ?></div>
@@ -194,7 +194,7 @@ require __DIR__ . '/includes/header.php';
     <section class="cartao">
         <div class="topo">
             <h2>💳 <?= ehAdmin() ? 'Alunos que não pagaram' : 'Mensalidades em aberto' ?></h2>
-            <a class="botao botao-pequeno" href="mensalidades/index.php"><?= ehAdmin() ? 'Ver mensalidades' : 'Informar pagamentos' ?></a>
+            <a class="botao botao-pequeno" href="financeiro/mensalidades.php"><?= ehAdmin() ? 'Ver mensalidades' : 'Informar pagamentos' ?></a>
         </div>
         <?php if (!$inadimplentes): ?>
             <p class="vazio">Ninguém com mensalidade em aberto. ♪</p>
@@ -223,7 +223,7 @@ require __DIR__ . '/includes/header.php';
         <section class="cartao">
             <div class="topo">
                 <h2>💰 Professores sem repasse</h2>
-                <a class="botao botao-pequeno" href="financeiro/index.php">Ver financeiro</a>
+                <a class="botao botao-pequeno" href="financeiro/repasses.php">Ver repasses</a>
             </div>
             <?php if (!$repasses): ?>
                 <p class="vazio">Nenhum repasse atrasado. ♪</p>

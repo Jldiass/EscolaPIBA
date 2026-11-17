@@ -22,7 +22,8 @@ O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIB
 | Fazer chamada | ❌ (só consulta) | Das aulas dele |
 | Consultar chamadas (presentes, faltas, chamadas não feitas) | De todos, com filtro por professor | Das aulas dele |
 | Relatório de frequência | Todos | Alunos dele |
-| Financeiro e repasses | ✅ | ❌ |
+| Gestão → Financeiro (Resumo do mês, Mensalidades dos alunos, Repasses dos professores) | ✅ | Só a aba Mensalidades, com os alunos dele |
+| Marcar aluno como bolsista | ✅ | ❌ |
 | Ver avisos (eventos e lembretes) | ✅ | ✅ |
 | Cadastrar, editar e excluir avisos | ✅ | ❌ |
 
@@ -50,12 +51,12 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF02 | Cadastrar, editar, buscar e excluir alunos (nome, nascimento, responsável, telefone, instrumento) |
 | RF03 | Exigir responsável para aluno menor de 18 anos |
 | RF04 | Cadastrar professores com login, senha e especialidades; desativar sem apagar o histórico |
-| RF05 | Matricular o aluno com um professor + especialidade, com dia da semana, horário e mensalidade |
+| RF05 | Matricular o aluno com um professor + especialidade, com dia da semana, horário e mensalidade; marcar a aula como gratuita (mensalidade 0) ou o aluno como bolsista da igreja |
 | RF06 | Impedir duas aulas do mesmo professor no mesmo horário |
 | RF07 | Mostrar a agenda semanal: por professor e geral |
 | RF08 | O professor registra a chamada (presente/faltou + observação) de cada aula dele; o administrador apenas consulta, por dia e por professor, com o resumo de presentes, faltas e chamadas não feitas |
 | RF09 | Calcular a frequência de cada aluno em um período e destacar quem está abaixo de 75% |
-| RF10 | Calcular, por mês, quanto cada professor recebe e quanto deve repassar à escola |
+| RF10 | Calcular, por mês, quanto cada professor recebe e quanto deve repassar à escola (só aulas cobradas) |
 | RF11 | Registrar e desfazer o repasse de cada professor no mês; mostrar quem está pendente |
 | RF12 | Permitir que o administrador ajuste o percentual da escola |
 | RF13 | O administrador define e troca as senhas de todos os usuários; ele não pode remover o próprio acesso |
@@ -76,15 +77,21 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 
 ## 5. Regras de negócio
 
-**Mensalidade e repasse.** O aluno paga a mensalidade ao professor. O professor fica com uma parte e repassa à escola o **percentual da escola** (padrão **30%**, ajustável na tela Financeiro).
+**O que é pago e o que é gratuito.** A escola é um projeto cultural da igreja, aberto à comunidade.
+- **Teoria musical** e **prática de orquestra** são **bancadas pela igreja**: a matrícula fica com mensalidade 0 ("Gratuita").
+- Só as **aulas de instrumento** têm mensalidade. O aluno que consegue **bolsa da igreja** fica marcado como **Bolsista** e também não paga.
+- Aulas gratuitas e de bolsistas ficam fora da cobrança, do repasse e da inadimplência. O resumo do mês mostra quantas são.
+
+**Mensalidade e repasse.** O aluno de instrumento paga a mensalidade ao professor. O professor fica com uma parte e repassa à escola o **percentual da escola** (padrão **30%**, ajustável em Gestão → Financeiro → Repasses dos professores).
 
 ```
-total do professor no mês = soma das mensalidades dos alunos ativos dele
+total do professor no mês = soma das mensalidades dos alunos ativos dele que pagam
+                            (sem bolsistas e sem aulas gratuitas)
 parte da escola           = total × percentual da escola
 professor recebe          = total − parte da escola
 ```
 
-Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100) + 2 de teoria (R$ 50) = **R$ 300**. A escola fica com 30% = **R$ 90**, e ele recebe **R$ 210**.
+Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100 cada) = **R$ 200**. Os 2 alunos de teoria não entram, porque a teoria é bancada pela igreja. A escola fica com 30% = **R$ 60**, e ele recebe **R$ 140**.
 
 **Situação do repasse.** No mês escolhido, cada professor aparece como **Pendente** até o administrador clicar em **Registrar repasse**. Depois fica **Repassado**, com a data e o valor. Um registro feito por engano pode ser desfeito.
 
@@ -139,7 +146,8 @@ erDiagram
         int dia_semana "1=seg ... 7=dom"
         text hora_inicio
         text hora_fim
-        real mensalidade
+        real mensalidade "0 = gratuita"
+        int bolsista "1 = bolsa da igreja"
         int ativo
     }
     PRESENCAS {
@@ -216,12 +224,21 @@ Resumo do dia (presentes, faltas, chamadas não feitas), filtro por professor e 
 ### Frequência
 ![Frequência](img/08-frequencia.png)
 
-### Financeiro
-![Financeiro](img/09-financeiro.png)
+### Gestão → Financeiro
+Um só item no menu, com três abas.
 
-### Mensalidades vistas pelo administrador (só consulta)
-Quem pagou, quem não pagou e quem ainda não foi informado, com filtro por professor e o valor em aberto.
+**Resumo do mês:** quanto entra de mensalidade (paga, não paga, sem informação), quantas aulas são bancadas pela igreja (gratuitas e bolsistas), a parte da escola e quanto já foi repassado. Também mostra a inadimplência: alunos que não pagaram e professores com repasse atrasado.
+![Financeiro: resumo do mês](img/09-financeiro.png)
+
+**Mensalidades dos alunos (só consulta):** quem pagou, quem não pagou e quem ainda não foi informado, com filtro por professor e o valor em aberto.
 ![Mensalidades do administrador](img/19-mensalidades-admin.png)
+
+**Repasses dos professores:** quanto cada professor deve repassar, quem já repassou e o percentual da escola.
+![Repasses dos professores](img/21-repasses.png)
+
+### Aluno bolsista
+Na ficha do aluno, o admin dá ou tira a bolsa da igreja. Na nova matrícula, a mensalidade 0 indica aula gratuita (teoria, orquestra).
+![Ficha de aluno bolsista](img/22-ficha-bolsista.png)
 
 ### Avisos
 Lembretes ativos em amarelo e próximos eventos com a data em destaque, o tipo (social ou interno) e quanto tempo falta. Professores veem tudo, mas só o administrador edita.
@@ -248,7 +265,7 @@ Cada professor entra com o próprio login e só vê o que é dele. O menu não m
 **Frequência dos alunos dele:** quem está abaixo de 75% aparece com o selo "atenção".
 ![Frequência do professor](img/16-frequencia-professor.png)
 
-**Mensalidades:** o professor marca quem pagou e quem não pagou no mês, com uma observação (ex.: "paga dia 20").
+**Gestão → Mensalidades:** o professor marca quem pagou e quem não pagou no mês, com uma observação (ex.: "paga dia 20"). Só aparecem os alunos que pagam.
 ![Mensalidades do professor](img/20-mensalidades-professor.png)
 
 ## 8. Identidade visual

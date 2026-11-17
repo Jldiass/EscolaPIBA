@@ -381,6 +381,7 @@ input[type=checkbox] { accent-color: var(--tinta); width: 16px; height: 16px; ve
 .painel-grade .cartao { margin: 0; }
 .painel-grade .vazio { padding: 22px 0; }
 .sem-quebra { white-space: nowrap; }
+.campo label.check { display: flex; gap: 8px; align-items: center; font-weight: 500; margin-top: 4px; }
 .nota-rodape { margin: 12px 0 0; font-size: 12.5px; color: var(--suave); }
 
 @media (prefers-reduced-motion: reduce) {

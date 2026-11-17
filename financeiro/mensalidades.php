@@ -1,6 +1,6 @@
 <?php
 /**
- * Mensalidades: o aluno paga ao professor, e o professor informa aqui,
+ * Financeiro > Mensalidades dos alunos: o aluno paga ao professor, e o professor informa aqui,
  * mês a mês, quem pagou e quem não pagou.
  * - Professor: marca os alunos dele.
  * - Admin: só consulta (vê quem não pagou e quem ainda não foi informado).
@@ -26,7 +26,7 @@ $sql = 'SELECT m.id, m.instrumento, m.mensalidade, a.id AS aluno_id, a.nome AS a
         JOIN alunos a   ON a.id = m.aluno_id
         JOIN usuarios u ON u.id = m.professor_id
         LEFT JOIN pagamentos g ON g.matricula_id = m.id AND g.mes = :mes
-        WHERE m.ativo = 1 AND a.ativo = 1';
+        WHERE m.ativo = 1 AND a.ativo = 1 AND ' . AULA_COBRADA;
 $params = [':mes' => $mes];
 if ($professorId) {
     $sql .= ' AND m.professor_id = :prof';
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $salvar->execute([$matriculaId, $mes, (int) $valor, $obs ?: null]);
         $salvas++;
     }
-    header('Location: index.php?mes=' . $mes . '&salvas=' . $salvas);
+    header('Location: mensalidades.php?mes=' . $mes . '&salvas=' . $salvas);
     exit;
 }
 
@@ -80,16 +80,16 @@ $mesAnterior = date('Y-m', strtotime($mes . '-01 -1 month'));
 $mesSeguinte = date('Y-m', strtotime($mes . '-01 +1 month'));
 
 $titulo = 'Mensalidades';
-$menu   = 'mensalidades';
+$menu   = 'financeiro';
 require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="topo">
     <div>
-        <h1>💳 Mensalidades · <?= nomeMes($mes) ?></h1>
+        <h1><?= ehAdmin() ? '💰 Financeiro' : '💳 Mensalidades' ?> · <?= nomeMes($mes) ?></h1>
         <p><?= ehAdmin()
-            ? 'Consulta: quem informa se o aluno pagou é o professor.'
-            : 'Marque quem pagou e quem não pagou a mensalidade neste mês.' ?></p>
+            ? 'Mensalidades dos alunos (consulta): quem informa se o aluno pagou é o professor.'
+            : 'Mensalidades: marque quem pagou e quem não pagou neste mês.' ?></p>
     </div>
     <div class="acoes">
         <a class="botao" href="?mes=<?= $mesAnterior . $filtroProf ?>">← <?= nomeMes($mesAnterior) ?></a>
@@ -99,6 +99,10 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
     </div>
 </div>
+
+<?php $aba = 'mensalidades'; require __DIR__ . '/../includes/abas-financeiro.php'; ?>
+
+<p class="nota-rodape" style="margin: -6px 0 14px">Só aparecem as aulas cobradas. Teoria musical e prática de orquestra (bancadas pela igreja) e alunos bolsistas não pagam mensalidade.</p>
 
 <?php if (isset($_GET['salvas'])): ?>
     <div class="alerta alerta-sucesso">Mensalidades salvas (<?= (int) $_GET['salvas'] ?> aluno(s)).</div>

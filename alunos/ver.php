@@ -53,6 +53,7 @@ $mensagens = [
     'matriculado'=> 'Matrícula feita. A aula já aparece na agenda do professor.',
     'encerrada'  => 'Matrícula encerrada.',
     'reativada'  => 'Matrícula reativada.',
+    'bolsa'      => 'Bolsa atualizada.',
 ];
 $msg = $mensagens[$_GET['msg'] ?? ''] ?? null;
 $erro = $_GET['erro'] ?? null;
@@ -123,7 +124,11 @@ require __DIR__ . '/../includes/header.php';
                     <td><span class="selo selo-instrumento"><?= e($m['instrumento']) ?></span></td>
                     <td><?= e($m['professor']) ?></td>
                     <td><?= DIAS_SEMANA[$m['dia_semana']] ?>, <?= e($m['hora_inicio']) ?>–<?= e($m['hora_fim']) ?></td>
-                    <td class="numero"><?= dinheiro($m['mensalidade']) ?></td>
+                    <td class="numero">
+                        <?php if ($m['mensalidade'] == 0): ?><span class="selo selo-ativo">Gratuita</span>
+                        <?php elseif ($m['bolsista']): ?><span class="selo selo-instrumento">Bolsista</span> <small class="suave"><?= dinheiro($m['mensalidade']) ?></small>
+                        <?php else: ?><?= dinheiro($m['mensalidade']) ?><?php endif; ?>
+                    </td>
                     <td class="numero"><?= $m['aulas'] ? round($m['presencas'] * 100 / $m['aulas']) . '%' : '-' ?>
                         <small class="suave">(<?= $m['presencas'] ?>/<?= $m['aulas'] ?>)</small></td>
                     <td><?= $m['ativo'] ? '<span class="selo selo-ativo">Ativa</span>' : '<span class="selo selo-inativo">Encerrada</span>' ?></td>
@@ -133,6 +138,9 @@ require __DIR__ . '/../includes/header.php';
                                 <?= campoCsrf() ?>
                                 <input type="hidden" name="matricula_id" value="<?= $m['id'] ?>">
                                 <input type="hidden" name="aluno_id" value="<?= $id ?>">
+                                <?php if ($m['ativo'] && $m['mensalidade'] > 0): ?>
+                                    <button class="botao botao-pequeno" name="acao" value="bolsa"><?= $m['bolsista'] ? 'Tirar bolsa' : 'Dar bolsa' ?></button>
+                                <?php endif; ?>
                                 <?php if ($m['ativo']): ?>
                                     <button class="botao botao-pequeno botao-perigo" name="acao" value="encerrar">Encerrar</button>
                                 <?php else: ?>
@@ -151,7 +159,7 @@ require __DIR__ . '/../includes/header.php';
 <?php if (ehAdmin()): ?>
 <section class="cartao" style="margin-top: 18px">
     <h2>+ Nova matrícula</h2>
-    <p class="suave">Liga o aluno a um professor, com o dia e horário fixo da aula e o valor da mensalidade.</p>
+    <p class="suave">Liga o aluno a um professor, com o dia e horário fixo da aula e o valor da mensalidade. Teoria musical e prática de orquestra são bancadas pela igreja: deixe a mensalidade em 0. Aula de instrumento com bolsa da igreja: marque "Bolsista".</p>
     <form class="formulario formulario-3" method="post" action="matricula.php">
         <?= campoCsrf() ?>
         <input type="hidden" name="acao" value="criar">
@@ -174,8 +182,9 @@ require __DIR__ . '/../includes/header.php';
             </select>
         </div>
         <div class="campo">
-            <label for="mensalidade">Mensalidade (R$) *</label>
+            <label for="mensalidade">Mensalidade (R$) * <small>(0 = gratuita)</small></label>
             <input id="mensalidade" name="mensalidade" type="number" min="0" step="0.01" required value="80">
+            <label class="check"><input type="checkbox" name="bolsista" value="1"> Bolsista (bolsa da igreja)</label>
         </div>
         <div class="campo">
             <label for="dia_semana">Dia da aula *</label>

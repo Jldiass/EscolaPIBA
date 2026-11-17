@@ -31,8 +31,10 @@ EscolaPIBA/
 ├── chamada/
 │   ├── index.php             Chamada do dia (professor marca; admin só consulta)
 │   └── frequencia.php        Relatório de frequência
-├── financeiro/index.php      Repasses do mês e percentual da escola
-├── mensalidades/index.php    Professor informa quem pagou; admin só consulta
+├── financeiro/                Gestão → Financeiro (abas em includes/abas-financeiro.php)
+│   ├── index.php             Resumo do mês (só admin; o professor vai direto para Mensalidades)
+│   ├── mensalidades.php      Professor informa quem pagou; admin só consulta
+│   └── repasses.php          Repasses dos professores e percentual da escola (só admin)
 ├── avisos/
 │   ├── index.php             Lembretes, próximos eventos e histórico (admin exclui)
 │   └── form.php              Cadastrar / editar aviso (só admin)
@@ -104,6 +106,11 @@ WHERE professor_id = ? AND dia_semana = ? AND ativo = 1
 ```sql
 INSERT INTO presencas (matricula_id, data, presente, observacao) VALUES (?, ?, ?, ?)
 ON CONFLICT (matricula_id, data) DO UPDATE SET presente = excluded.presente
+```
+
+**Aula cobrada ou não** (`includes/consultas.php`): uma constante com a regra, usada em todas as consultas de dinheiro.
+```php
+const AULA_COBRADA = 'm.mensalidade > 0 AND m.bolsista = 0';
 ```
 
 **Lembrete que some sozinho** (`includes/avisos.php`): não precisa de tarefa agendada. A própria consulta compara a validade com a data de hoje.

@@ -6,6 +6,14 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
+ * Quais aulas são cobradas. Teoria musical e prática de orquestra são
+ * bancadas pela igreja (mensalidade 0), e o aluno de instrumento pode
+ * ter bolsa da igreja. Essas aulas ficam fora da cobrança, do repasse
+ * e da inadimplência.
+ */
+const AULA_COBRADA = 'm.mensalidade > 0 AND m.bolsista = 0';
+
+/**
  * Aulas (matrículas ativas) de um dia da semana.
  * Se $professorId for informado, traz só as aulas daquele professor.
  */
@@ -37,6 +45,7 @@ function aulasDoDia(int $diaSemana, ?int $professorId = null): array
  * (configurado na tela Financeiro, padrão 30%).
  *
  *   total_mensalidades = soma das mensalidades dos alunos ativos do professor
+ *                        (só aulas cobradas: sem bolsistas e sem aulas gratuitas)
  *   parte_escola       = total_mensalidades × percentual_escola / 100
  *   parte_professor    = total_mensalidades − parte_escola
  */
@@ -50,7 +59,7 @@ function resumoFinanceiro(string $mes): array
                 COALESCE(SUM(m.mensalidade), 0) AS total_mensalidades,
                 r.id AS repasse_id, r.valor AS valor_repassado, r.data_pagamento
          FROM usuarios u
-         LEFT JOIN matriculas m ON m.professor_id = u.id AND m.ativo = 1
+         LEFT JOIN matriculas m ON m.professor_id = u.id AND m.ativo = 1 AND " . AULA_COBRADA . "
               AND m.aluno_id IN (SELECT id FROM alunos WHERE ativo = 1)
          LEFT JOIN repasses r   ON r.professor_id = u.id AND r.mes = :mes
          WHERE u.perfil = 'professor' AND u.ativo = 1
@@ -138,7 +147,7 @@ function alunosInadimplentes(?int $professorId = null): array
             JOIN matriculas m ON m.id = g.matricula_id
             JOIN alunos a     ON a.id = m.aluno_id
             JOIN usuarios u   ON u.id = m.professor_id
-            WHERE g.pago = 0 AND m.ativo = 1 AND a.ativo = 1";
+            WHERE g.pago = 0 AND m.ativo = 1 AND a.ativo = 1 AND " . AULA_COBRADA;
     $params = [];
     if ($professorId) {
         $sql .= ' AND m.professor_id = ?';
@@ -181,7 +190,7 @@ function mensalidadesSemInformacao(string $mes, ?int $professorId = null): int
 {
     $sql = 'SELECT COUNT(*) FROM matriculas m JOIN alunos a ON a.id = m.aluno_id
             LEFT JOIN pagamentos g ON g.matricula_id = m.id AND g.mes = ?
-            WHERE m.ativo = 1 AND a.ativo = 1 AND g.id IS NULL';
+            WHERE m.ativo = 1 AND a.ativo = 1 AND g.id IS NULL AND ' . AULA_COBRADA;
     $params = [$mes];
     if ($professorId) {
         $sql .= ' AND m.professor_id = ?';

@@ -28,9 +28,8 @@ $itensMenu = [
     ['agenda',      'Agenda',       'agenda.php',             '🗓', false],
     ['chamada',     'Chamada',      'chamada/index.php',      '✓',  false],
     ['frequencia',  'Frequência',   'chamada/frequencia.php', '📊', false],
-    ['mensalidades','Mensalidades', 'mensalidades/index.php', '💳', false],
-    ['grupo',       'Gestão',       null,                     '',   true],
-    ['financeiro',  'Financeiro',   'financeiro/index.php',   '💰', true],
+    ['grupo',       'Gestão',       null,                     '',   false],
+    ['financeiro',  ehAdmin() ? 'Financeiro' : 'Mensalidades', ehAdmin() ? 'financeiro/index.php' : 'financeiro/mensalidades.php', ehAdmin() ? '💰' : '💳', false],
 ];
 ?>
 <!DOCTYPE html>

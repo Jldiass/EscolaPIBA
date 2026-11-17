@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS matriculas (
     dia_semana    INTEGER NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1 = segunda ... 7 = domingo
     hora_inicio   TEXT    NOT NULL,   -- 'HH:MM'
     hora_fim      TEXT    NOT NULL,
-    mensalidade   REAL    NOT NULL DEFAULT 0,  -- valor mensal pago pelo aluno
+    mensalidade   REAL    NOT NULL DEFAULT 0,  -- valor mensal (0 = gratuita: teoria e orquestra, bancadas pela igreja)
+    bolsista      INTEGER NOT NULL DEFAULT 0,  -- 1 = aula de instrumento com bolsa da igreja (não paga)
     ativo         INTEGER NOT NULL DEFAULT 1,
     criado_em     TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
 );

@@ -1,62 +1,65 @@
 <?php
 /**
- * Financeiro (só admin).
- *
- * Para o mês escolhido, mostra professor por professor:
- *   - quantos alunos ele tem e a soma das mensalidades;
- *   - quanto fica com o professor e quanto deve ser repassado à escola;
- *   - se ele JÁ REPASSOU ou se está PENDENTE.
- *
- * O admin registra o repasse quando o professor entrega o valor,
- * e pode ajustar o percentual da escola.
+ * Financeiro > Resumo do mês (só admin).
+ * Junta as duas pontas do dinheiro da escola:
+ *   1) Mensalidades: o aluno paga o professor (o professor informa quem pagou).
+ *   2) Repasses: o professor repassa à escola o percentual da escola.
+ * O professor que abrir esta página vai direto para Mensalidades.
  */
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/consultas.php';
 
-$usuario = exigirAdmin();
+exigirLogin();
+if (!ehAdmin()) {
+    header('Location: mensalidades.php');
+    exit;
+}
 $pdo = conectar();
 
 $mes = $_GET['mes'] ?? date('Y-m');
-if (!preg_match('/^\d{4}-\d{2}$/', $mes)) {
+if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes)) {
     $mes = date('Y-m');
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verificarCsrf();
-    $acao = $_POST['acao'] ?? '';
-
-    if ($acao === 'repassar') {
-        $pdo->prepare(
-            'INSERT INTO repasses (professor_id, mes, valor, data_pagamento, observacao, registrado_por)
-             VALUES (?, ?, ?, ?, ?, ?)
-             ON CONFLICT (professor_id, mes) DO UPDATE SET valor = excluded.valor,
-                 data_pagamento = excluded.data_pagamento, observacao = excluded.observacao'
-        )->execute([
-            (int) $_POST['professor_id'], $mes, (float) $_POST['valor'],
-            $_POST['data_pagamento'] ?: date('Y-m-d'), trim($_POST['observacao'] ?? '') ?: null, $usuario['id'],
-        ]);
-        $msg = 'Repasse registrado.';
-    } elseif ($acao === 'desfazer') {
-        $pdo->prepare('DELETE FROM repasses WHERE professor_id = ? AND mes = ?')
-            ->execute([(int) $_POST['professor_id'], $mes]);
-        $msg = 'Repasse desfeito: o professor voltou para pendente.';
-    } elseif ($acao === 'percentual') {
-        $percentual = max(0, min(100, (float) $_POST['percentual']));
-        $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('percentual_escola', ?)
-                       ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor")->execute([$percentual]);
-        $msg = 'Percentual da escola atualizado para ' . $percentual . '%.';
+// 1) Mensalidades do mês, conforme o professor informou
+$stmt = $pdo->prepare(
+    'SELECT m.mensalidade, g.pago
+     FROM matriculas m
+     JOIN alunos a ON a.id = m.aluno_id
+     LEFT JOIN pagamentos g ON g.matricula_id = m.id AND g.mes = ?
+     WHERE m.ativo = 1 AND a.ativo = 1 AND ' . AULA_COBRADA
+);
+$stmt->execute([$mes]);
+$mensalidades = $stmt->fetchAll();
+$esperado   = array_sum(array_column($mensalidades, 'mensalidade'));
+$pago       = 0; $naoPago = 0; $qtdNaoPago = 0; $qtdSemInfo = 0;
+foreach ($mensalidades as $l) {
+    if ($l['pago'] === null) {
+        $qtdSemInfo++;
+    } elseif ((int) $l['pago'] === 1) {
+        $pago += $l['mensalidade'];
+    } else {
+        $naoPago += $l['mensalidade'];
+        $qtdNaoPago++;
     }
-    header('Location: index.php?mes=' . $mes . '&msg=' . urlencode($msg ?? ''));
-    exit;
 }
 
-$linhas     = resumoFinanceiro($mes);
-$percentual = (float) configuracao('percentual_escola', '30');
+// Aulas sem cobrança: gratuitas (teoria, orquestra) e bolsistas da igreja
+$semCobranca = $pdo->query(
+    'SELECT SUM(m.mensalidade = 0) AS gratuitas, SUM(m.mensalidade > 0 AND m.bolsista = 1) AS bolsistas
+     FROM matriculas m JOIN alunos a ON a.id = m.aluno_id WHERE m.ativo = 1 AND a.ativo = 1'
+)->fetch();
 
-$totalMensalidades = array_sum(array_column($linhas, 'total_mensalidades'));
-$totalEscola       = array_sum(array_column($linhas, 'parte_escola'));
-$totalRecebido     = array_sum(array_map(fn($l) => $l['repassado'] ? $l['valor_repassado'] : 0, $linhas));
-$totalPendente     = array_sum(array_map(fn($l) => $l['repassado'] ? 0 : $l['parte_escola'], $linhas));
+// 2) Repasses do mês, professor por professor
+$percentual   = (float) configuracao('percentual_escola', '30');
+$repasses     = resumoFinanceiro($mes);
+$parteEscola  = array_sum(array_column($repasses, 'parte_escola'));
+$recebido     = array_sum(array_map(fn($r) => $r['repassado'] ? $r['valor_repassado'] : 0, $repasses));
+$aReceber     = array_sum(array_map(fn($r) => $r['repassado'] ? 0 : $r['parte_escola'], $repasses));
+
+// Quem está devendo (aluno e professor)
+$inadimplentes = alunosInadimplentes();
+$atrasados     = array_filter(repassesPendentes(), fn($r) => $r['mes'] < date('Y-m'));
 
 $mesAnterior = date('Y-m', strtotime($mes . '-01 -1 month'));
 $mesSeguinte = date('Y-m', strtotime($mes . '-01 +1 month'));
@@ -78,89 +81,70 @@ require __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php if (!empty($_GET['msg'])): ?>
-    <div class="alerta alerta-sucesso"><?= e($_GET['msg']) ?></div>
-<?php endif; ?>
+<?php $aba = 'resumo'; require __DIR__ . '/../includes/abas-financeiro.php'; ?>
 
+<h2>💳 Mensalidades dos alunos</h2>
 <section class="indicadores">
-    <div class="cartao indicador">
-        <span class="icone">♫</span>
-        <div class="rotulo">Mensalidades do mês</div>
-        <div class="valor"><?= dinheiro($totalMensalidades) ?></div>
-    </div>
-    <div class="cartao indicador">
-        <span class="icone">🏛</span>
-        <div class="rotulo">Parte da escola (<?= $percentual ?>%)</div>
-        <div class="valor"><?= dinheiro($totalEscola) ?></div>
-    </div>
-    <div class="cartao indicador">
-        <span class="icone">✓</span>
-        <div class="rotulo">Já repassado</div>
-        <div class="valor texto-ok"><?= dinheiro($totalRecebido) ?></div>
-    </div>
-    <div class="cartao indicador">
-        <span class="icone">⏳</span>
-        <div class="rotulo">Pendente</div>
-        <div class="valor <?= $totalPendente > 0 ? 'texto-alerta' : '' ?>"><?= dinheiro($totalPendente) ?></div>
-    </div>
+    <div class="cartao indicador"><span class="icone">♫</span><div class="rotulo">Mensalidades do mês</div><div class="valor"><?= dinheiro($esperado) ?></div></div>
+    <div class="cartao indicador"><span class="icone">✓</span><div class="rotulo">Pagas (informado)</div><div class="valor"><?= dinheiro($pago) ?></div></div>
+    <a class="cartao indicador" href="mensalidades.php?mes=<?= $mes ?>"><span class="icone">✗</span><div class="rotulo">Não pagas · <?= $qtdNaoPago ?> aluno(s)</div>
+        <div class="valor <?= $naoPago ? 'texto-alerta' : '' ?>"><?= dinheiro($naoPago) ?></div></a>
+    <a class="cartao indicador" href="mensalidades.php?mes=<?= $mes ?>"><span class="icone">⏳</span><div class="rotulo">Sem informação</div><div class="valor"><?= $qtdSemInfo ?> aluno(s)</div></a>
 </section>
 
-<section class="cartao">
-    <h2>Professores</h2>
-    <table class="tabela">
-        <thead>
-            <tr>
-                <th>Professor</th><th>Alunos</th><th>Mensalidades</th>
-                <th>Professor recebe</th><th>Repasse à escola</th><th>Situação</th><th></th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($linhas as $l): ?>
-            <tr>
-                <td><b><?= e($l['nome']) ?></b></td>
-                <td class="numero"><?= $l['qtd_alunos'] ?></td>
-                <td class="numero"><?= dinheiro($l['total_mensalidades']) ?></td>
-                <td class="numero"><?= dinheiro($l['parte_professor']) ?></td>
-                <td class="numero"><b><?= dinheiro($l['parte_escola']) ?></b></td>
-                <td>
-                    <?php if ($l['repassado']): ?>
-                        <span class="selo selo-ativo">Repassado</span>
-                        <small class="suave"><?= date('d/m', strtotime($l['data_pagamento'])) ?> · <?= dinheiro($l['valor_repassado']) ?></small>
-                    <?php elseif ($l['parte_escola'] > 0): ?>
-                        <span class="selo selo-pendente">Pendente</span>
-                    <?php else: ?>
-                        <span class="suave">sem alunos</span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <form method="post" class="acoes">
-                        <?= campoCsrf() ?>
-                        <input type="hidden" name="professor_id" value="<?= $l['id'] ?>">
-                        <?php if ($l['repassado']): ?>
-                            <button class="botao botao-pequeno botao-perigo" name="acao" value="desfazer"
-                                    onclick="return confirm('Desfazer o repasse deste professor?')">Desfazer</button>
-                        <?php elseif ($l['parte_escola'] > 0): ?>
-                            <input type="hidden" name="valor" value="<?= $l['parte_escola'] ?>">
-                            <input type="hidden" name="data_pagamento" value="<?= date('Y-m-d') ?>">
-                            <button class="botao botao-pequeno botao-primario" name="acao" value="repassar">Registrar repasse</button>
-                        <?php endif; ?>
-                    </form>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+<p class="nota-rodape" style="margin: -4px 0 18px">🎁 Sem cobrança, bancadas pela igreja: <b><?= (int) $semCobranca['gratuitas'] ?></b> aula(s) gratuita(s) (teoria musical e prática de orquestra) e <b><?= (int) $semCobranca['bolsistas'] ?></b> aluno(s) bolsista(s) de instrumento.</p>
+
+<h2>🏦 Repasses dos professores</h2>
+<section class="indicadores">
+    <div class="cartao indicador"><span class="icone">🏫</span><div class="rotulo">Parte da escola (<?= $percentual ?>%)</div><div class="valor"><?= dinheiro($parteEscola) ?></div></div>
+    <div class="cartao indicador"><span class="icone">✓</span><div class="rotulo">Já repassado</div><div class="valor"><?= dinheiro($recebido) ?></div></div>
+    <a class="cartao indicador" href="repasses.php?mes=<?= $mes ?>"><span class="icone">⏳</span><div class="rotulo">Falta repassar</div>
+        <div class="valor <?= $aReceber ? 'texto-alerta' : '' ?>"><?= dinheiro($aReceber) ?></div></a>
+    <div class="cartao indicador"><span class="icone">𝄞</span><div class="rotulo">Professores que repassaram</div>
+        <div class="valor"><?= count(array_filter($repasses, fn($r) => $r['repassado'])) ?>/<?= count($repasses) ?></div></div>
 </section>
 
-<section class="cartao" style="margin-top: 18px">
-    <h2>Percentual da escola</h2>
-    <p class="suave">Quanto da mensalidade de cada aluno o professor repassa à escola. O restante fica com o professor.</p>
-    <form method="post" class="acoes" style="justify-content: flex-start">
-        <?= campoCsrf() ?>
-        <input type="hidden" name="acao" value="percentual">
-        <input class="select-simples" type="number" name="percentual" min="0" max="100" step="0.5" value="<?= $percentual ?>"> %
-        <button class="botao" type="submit">Salvar</button>
-    </form>
-</section>
+<h2>⚠️ Inadimplência</h2>
+<div class="painel-grade">
+    <section class="cartao">
+        <div class="topo"><h2>Alunos que não pagaram</h2><a class="botao botao-pequeno" href="mensalidades.php">Ver mensalidades</a></div>
+        <?php if (!$inadimplentes): ?>
+            <p class="vazio">Ninguém com mensalidade em aberto. ♪</p>
+        <?php else: ?>
+            <table class="tabela">
+                <thead><tr><th>Aluno</th><th>Professor</th><th>Meses</th><th>Em aberto</th></tr></thead>
+                <tbody>
+                <?php foreach ($inadimplentes as $i): ?>
+                    <tr>
+                        <td><?= e($i['aluno']) ?></td>
+                        <td><?= e($i['professor']) ?></td>
+                        <td><small><?= implode(', ', array_map('nomeMes', $i['meses'])) ?></small></td>
+                        <td class="numero texto-alerta"><?= dinheiro($i['total']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
+    <section class="cartao">
+        <div class="topo"><h2>Professores com repasse atrasado</h2><a class="botao botao-pequeno" href="repasses.php">Ver repasses</a></div>
+        <?php if (!$atrasados): ?>
+            <p class="vazio">Nenhum repasse atrasado. ♪</p>
+        <?php else: ?>
+            <table class="tabela">
+                <thead><tr><th>Professor</th><th>Mês</th><th>Deve repassar</th></tr></thead>
+                <tbody>
+                <?php foreach ($atrasados as $r): ?>
+                    <tr>
+                        <td><?= e($r['nome']) ?></td>
+                        <td><?= nomeMes($r['mes']) ?></td>
+                        <td class="numero texto-alerta"><?= dinheiro($r['parte_escola']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
+</div>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>
