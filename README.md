@@ -5,7 +5,7 @@ Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **a
 - 👩‍🎓 **Alunos:** cadastro completo, ficha individual e matrícula com professor, dia, horário e mensalidade
 - 🎻 **Professores:** cada um com o próprio **login** e as suas **especialidades** (violino, viola, teoria musical, bateria…)
 - 🗓 **Agenda semanal:** cada professor vê as aulas da semana dele; o admin vê a de todos
-- ✓ **Chamada:** o professor marca presença ou falta em cada aula
+- ✓ **Chamada:** o professor marca presença ou falta em cada aula; o admin só consulta (presentes, faltas e chamadas não feitas)
 - 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
 - 💰 **Financeiro:** quanto cada professor recebe pelos seus alunos e **quem já repassou** a parte da escola no mês
 - 📣 **Avisos:** o administrador publica eventos sociais, eventos internos e lembretes (ex.: "não usar a sala 101"); todos veem e o painel mostra os próximos
@@ -34,7 +34,7 @@ Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com d
 
 | Login | Perfil | O que vê |
 |---|---|---|
-| **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, chamadas, publica avisos, vê frequência e financeiro |
+| **`admin`** | **Administrador** | **Tudo**: cadastra alunos, professores e outros administradores, faz matrículas, publica avisos, acompanha as chamadas e a frequência (só consulta) e cuida do financeiro |
 | `thiago` | Professor de Violino | Só os alunos e a agenda dele |
 | `geovana` | Professora de Viola | Só os alunos e a agenda dela |
 | `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |

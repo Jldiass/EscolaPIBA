@@ -18,7 +18,8 @@ O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIB
 | Cadastrar professores e administradores, definir logins | ✅ | ❌ |
 | Trocar a própria senha (🔑) | ✅ | ✅ |
 | Agenda semanal | De todos, com filtro | A dele |
-| Fazer chamada | De qualquer aula | Das aulas dele |
+| Fazer chamada | ❌ (só consulta) | Das aulas dele |
+| Consultar chamadas (presentes, faltas, chamadas não feitas) | De todos, com filtro por professor | Das aulas dele |
 | Relatório de frequência | Todos | Alunos dele |
 | Financeiro e repasses | ✅ | ❌ |
 | Ver avisos (eventos e lembretes) | ✅ | ✅ |
@@ -51,7 +52,7 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF05 | Matricular o aluno com um professor + especialidade, com dia da semana, horário e mensalidade |
 | RF06 | Impedir duas aulas do mesmo professor no mesmo horário |
 | RF07 | Mostrar a agenda semanal: por professor e geral |
-| RF08 | Registrar a chamada (presente/faltou + observação) de cada aula |
+| RF08 | O professor registra a chamada (presente/faltou + observação) de cada aula dele; o administrador apenas consulta, por dia e por professor, com o resumo de presentes, faltas e chamadas não feitas |
 | RF09 | Calcular a frequência de cada aluno em um período e destacar quem está abaixo de 75% |
 | RF10 | Calcular, por mês, quanto cada professor recebe e quanto deve repassar à escola |
 | RF11 | Registrar e desfazer o repasse de cada professor no mês; mostrar quem está pendente |
@@ -83,6 +84,8 @@ professor recebe          = total − parte da escola
 Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100) + 2 de teoria (R$ 50) = **R$ 300**. A escola fica com 30% = **R$ 90**, e ele recebe **R$ 210**.
 
 **Situação do repasse.** No mês escolhido, cada professor aparece como **Pendente** até o administrador clicar em **Registrar repasse**. Depois fica **Repassado**, com a data e o valor. Um registro feito por engano pode ser desfeito.
+
+**Chamada.** Quem faz a chamada no dia a dia é o próprio professor. O administrador vê a mesma tela só para consulta: a situação de cada aluno e quantas chamadas o professor ainda não fez. Se tentar salvar, o sistema recusa (erro 403).
 
 **Frequência.** `frequência = presenças ÷ aulas com chamada × 100`. Abaixo de **75%** o aluno aparece com o selo "atenção", para a escola procurar a família antes que ele desista.
 
@@ -183,8 +186,13 @@ Dados, últimas chamadas, matrículas com frequência e o formulário de nova ma
 ### Agenda semanal (administrador vê todos, uma cor por professor)
 ![Agenda geral](img/06-agenda-geral.png)
 
-### Chamada
-![Chamada](img/07-chamada.png)
+### Chamada do professor
+O professor marca presente ou faltou e pode deixar uma observação.
+![Chamada do professor](img/07-chamada.png)
+
+### Chamada vista pelo administrador (só consulta)
+Resumo do dia (presentes, faltas, chamadas não feitas), filtro por professor e a situação de cada aluno, sem botões de marcar.
+![Chamada do administrador](img/15-chamada-admin.png)
 
 ### Frequência
 ![Frequência](img/08-frequencia.png)

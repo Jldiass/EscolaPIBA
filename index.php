@@ -110,7 +110,7 @@ require __DIR__ . '/includes/header.php';
 <section class="cartao">
     <div class="topo">
         <h2>Aulas de hoje</h2>
-        <a class="botao botao-pequeno" href="chamada/index.php">Fazer chamada</a>
+        <a class="botao botao-pequeno" href="chamada/index.php"><?= ehAdmin() ? 'Ver chamadas' : 'Fazer chamada' ?></a>
     </div>
     <?php if (!$aulasHoje): ?>
         <p class="vazio">Sem aulas hoje. Bom descanso! 𝄽</p>

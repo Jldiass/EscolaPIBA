@@ -30,7 +30,7 @@ EscolaPIBA/
 │   ├── index.php             Cartões dos professores + lista de administradores
 │   └── form.php              Cadastrar / editar professor ou administrador, login e senha
 ├── chamada/
-│   ├── index.php             Chamada do dia
+│   ├── index.php             Chamada do dia (professor marca; admin só consulta)
 │   └── frequencia.php        Relatório de frequência
 ├── financeiro/index.php      Repasses do mês e percentual da escola
 ├── avisos/
