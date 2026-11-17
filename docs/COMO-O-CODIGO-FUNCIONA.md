@@ -35,6 +35,10 @@ EscolaPIBA/
 │   ├── index.php             Resumo do mês (só admin; o professor vai direto para Mensalidades)
 │   ├── mensalidades.php      Professor informa quem pagou; admin só consulta
 │   └── repasses.php          Repasses dos professores e percentual da escola (só admin)
+├── orquestra/
+│   ├── index.php             Membros com status de assiduidade + escolha do regente
+│   ├── chamada.php           Chamada do ensaio (regente marca; os outros consultam)
+│   └── membro.php            Cadastrar / editar membro (admin)
 ├── avisos/
 │   ├── index.php             Lembretes, próximos eventos e histórico (admin exclui)
 │   └── form.php              Cadastrar / editar aviso (só admin)
@@ -111,6 +115,16 @@ ON CONFLICT (matricula_id, data) DO UPDATE SET presente = excluded.presente
 **Aula cobrada ou não** (`includes/consultas.php`): uma constante com a regra, usada em todas as consultas de dinheiro.
 ```php
 const AULA_COBRADA = 'm.mensalidade > 0 AND m.bolsista = 0';
+```
+
+**Status da orquestra** (`includes/orquestra.php`): um `match` transforma o percentual em status.
+```php
+return match (true) {
+    $percentual === null => 'novo',
+    $percentual >= 75    => 'frequente',
+    $percentual >= 40    => 'as_vezes',
+    default              => 'ausente',
+};
 ```
 
 **Lembrete que some sozinho** (`includes/avisos.php`): não precisa de tarefa agendada. A própria consulta compara a validade com a data de hoje.

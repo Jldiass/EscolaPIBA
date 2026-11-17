@@ -10,6 +10,7 @@
 --   configuracoes -> parâmetros da escola (ex.: % da escola)
 --   avisos      -> eventos sociais, eventos internos e lembretes
 --   pagamentos  -> mensalidade do aluno: o professor informa se pagou no mês
+--   orquestra_* -> membros da orquestra, ensaios e presença (assiduidade)
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -97,4 +98,30 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     observacao    TEXT,
     informado_em  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime')),
     UNIQUE (matricula_id, mes)        -- uma informação por aluno por mês
+);
+
+-- Orquestra: membros (alunos da escola ou não), ensaios e presença em cada ensaio
+CREATE TABLE IF NOT EXISTS orquestra_membros (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome        TEXT    NOT NULL,
+    naipe       TEXT    NOT NULL,     -- Cordas, Madeiras, Metais, Percussão...
+    instrumento TEXT    NOT NULL,
+    telefone    TEXT,
+    aluno_id    INTEGER REFERENCES alunos(id) ON DELETE SET NULL,  -- se também é aluno da escola
+    ativo       INTEGER NOT NULL DEFAULT 1,
+    criado_em   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS orquestra_ensaios (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    data        TEXT    NOT NULL UNIQUE,  -- um ensaio por dia
+    observacao  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS orquestra_presencas (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    ensaio_id   INTEGER NOT NULL REFERENCES orquestra_ensaios(id) ON DELETE CASCADE,
+    membro_id   INTEGER NOT NULL REFERENCES orquestra_membros(id) ON DELETE CASCADE,
+    presente    INTEGER NOT NULL,         -- 1 = veio, 0 = faltou
+    UNIQUE (ensaio_id, membro_id)
 );

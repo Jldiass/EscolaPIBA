@@ -24,6 +24,9 @@ O **Música PIBA** organiza o dia a dia da escola de música comunitária da PIB
 | Relatório de frequência | Todos | Alunos dele |
 | Gestão → Financeiro (Resumo do mês, Mensalidades dos alunos, Repasses dos professores) | ✅ | Só a aba Mensalidades, com os alunos dele |
 | Marcar aluno como bolsista | ✅ | ❌ |
+| Orquestra: ver membros e status de assiduidade | ✅ | ✅ |
+| Orquestra: cadastrar membros e escolher o regente | ✅ | ❌ |
+| Orquestra: chamada do ensaio | ❌ (só consulta) | Só o regente |
 | Ver avisos (eventos e lembretes) | ✅ | ✅ |
 | Cadastrar, editar e excluir avisos | ✅ | ❌ |
 
@@ -63,6 +66,7 @@ Login inicial do administrador: **`admin`** / senha **`piba123`** (troque no pri
 | RF14 | O administrador publica avisos: eventos sociais, eventos internos (com data, hora e local) e lembretes com validade (ex.: "não usar a sala 101"); todos os usuários veem os avisos e o painel mostra os próximos |
 | RF15 | O professor informa, mês a mês, se cada aluno dele pagou ou não a mensalidade (com observação); o administrador só consulta |
 | RF16 | Um painel inicial para cada perfil. Admin: próximas aulas de todos os professores, avisos e lembretes, alunos que não pagaram e professores com repasse atrasado. Professor: as próximas aulas dele, avisos, mensalidades em aberto e alunos com frequência abaixo de 75% |
+| RF17 | Orquestra: cadastro dos membros (alunos da escola ou não) por naipe e instrumento, chamada dos ensaios feita pelo regente e status de assiduidade de cada membro (Frequente, De vez em quando, Ausente, Novo) calculado pelos últimos 8 ensaios |
 
 ### Requisitos não funcionais
 
@@ -101,6 +105,17 @@ Exemplo com o Pastor Elias: 2 alunos de bateria (R$ 100 cada) = **R$ 200**. Os 2
 - **Aluno que não pagou:** o aluno paga a mensalidade ao professor, e o professor marca em *Mensalidades* quem pagou e quem não pagou. Aparece no painel com os meses em aberto e o valor total. Quem ainda não foi informado no mês aparece como "sem informação".
 - **Professor sem repasse:** mês que já fechou e o professor não repassou a parte da escola. O mês atual ainda está no prazo e aparece só como lembrete.
 
+**Assiduidade na orquestra.** Conta a presença de cada membro nos **últimos 8 ensaios**, só os ensaios a partir da entrada dele na orquestra.
+
+| Presença | Status |
+|---|---|
+| 75% ou mais | **Frequente** |
+| 40% a 74% | **De vez em quando** |
+| menos de 40% | **Ausente** |
+| nenhum ensaio ainda | **Novo** |
+
+Quem faz a chamada do ensaio é o **regente** (escolhido pelo admin; nos dados de exemplo, o Pastor Elias). O membro que sai da orquestra é desativado, e o histórico fica guardado.
+
 **Frequência.** `frequência = presenças ÷ aulas com chamada × 100`. Abaixo de **75%** o aluno aparece com o selo "atenção", para a escola procurar a família antes que ele desista.
 
 **Conflito de horário.** Duas aulas do mesmo professor se sobrepõem quando uma começa antes de a outra terminar. Nesse caso a matrícula é recusada.
@@ -119,6 +134,9 @@ erDiagram
     USUARIOS ||--o{ REPASSES : "repassa"
     USUARIOS ||--o{ AVISOS : "publica"
     MATRICULAS ||--o{ PAGAMENTOS : "mensalidades"
+    ALUNOS |o--o{ ORQUESTRA_MEMBROS : "também toca na orquestra"
+    ORQUESTRA_ENSAIOS ||--o{ ORQUESTRA_PRESENCAS : "chamada"
+    ORQUESTRA_MEMBROS ||--o{ ORQUESTRA_PRESENCAS : "presença"
 
     USUARIOS {
         int id PK
@@ -163,6 +181,25 @@ erDiagram
         text mes "AAAA-MM"
         real valor
         text data_pagamento
+    }
+    ORQUESTRA_MEMBROS {
+        int id PK
+        text nome
+        text naipe
+        text instrumento
+        int aluno_id FK "opcional"
+        int ativo
+    }
+    ORQUESTRA_ENSAIOS {
+        int id PK
+        text data UK
+        text observacao
+    }
+    ORQUESTRA_PRESENCAS {
+        int id PK
+        int ensaio_id FK
+        int membro_id FK
+        int presente "1 ou 0"
     }
     PAGAMENTOS {
         int id PK
@@ -239,6 +276,16 @@ Um só item no menu, com três abas.
 ### Aluno bolsista
 Na ficha do aluno, o admin dá ou tira a bolsa da igreja. Na nova matrícula, a mensalidade 0 indica aula gratuita (teoria, orquestra).
 ![Ficha de aluno bolsista](img/22-ficha-bolsista.png)
+
+### Orquestra
+Membros por naipe, com as bolinhas dos últimos 8 ensaios (verde = veio, rosa = faltou), a presença em % e o status. Os filtros mostram só os frequentes, os de vez em quando, os ausentes ou os novos. O admin cadastra membros e escolhe o regente.
+![Orquestra](img/23-orquestra.png)
+
+**Chamada do ensaio (regente):** o regente marca presente ou faltou para cada membro e pode deixar uma observação (repertório, recado).
+![Chamada da orquestra pelo regente](img/24-orquestra-chamada-regente.png)
+
+**Chamada do ensaio vista pelo admin (só consulta):**
+![Chamada da orquestra vista pelo admin](img/25-orquestra-chamada-admin.png)
 
 ### Avisos
 Lembretes ativos em amarelo e próximos eventos com a data em destaque, o tipo (social ou interno) e quanto tempo falta. Professores veem tudo, mas só o administrador edita.

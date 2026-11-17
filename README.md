@@ -8,6 +8,7 @@ Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **a
 - ✓ **Chamada:** o professor marca presença ou falta em cada aula; o admin só consulta (presentes, faltas e chamadas não feitas)
 - 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
 - 💰 **Gestão → Financeiro** (três abas): **resumo do mês**, **mensalidades dos alunos** (o professor informa quem pagou) e **repasses dos professores** à escola
+- 🎼 **Orquestra:** membros por naipe, chamada dos ensaios feita pelo regente e status de cada membro (frequente, de vez em quando, ausente)
 - 🎁 **Aulas bancadas pela igreja:** teoria musical e prática de orquestra são gratuitas, e o aluno de instrumento pode ser **bolsista**. Nenhum dos dois entra na cobrança
 - 🏠 **Um painel para cada perfil:** o admin vê as próximas aulas de todos, avisos, alunos que não pagaram e professores sem repasse; o professor vê as aulas dele, avisos, mensalidades em aberto e alunos com frequência baixa
 - 📣 **Avisos:** o administrador publica eventos sociais, eventos internos e lembretes (ex.: "não usar a sala 101"); todos veem e o painel mostra os próximos

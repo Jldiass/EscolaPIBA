@@ -111,4 +111,48 @@ function inserirDadosFicticios(PDO $pdo): void
             $pagamento->execute([$matriculaId, $mesAtual, 1, null]);
         }
     }
+
+    // Orquestra: o Pastor Elias rege e faz a chamada dos ensaios (sábado à tarde)
+    $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('regente_orquestra', ?)")->execute([$elias]);
+
+    // [nome, naipe, instrumento, aluno (índice em $alunos ou null), presença nos 8 últimos ensaios]
+    //   1 = veio, 0 = faltou; null na presença = entrou agora (status "Novo")
+    $membros = [
+        ['Ana Beatriz Souza',    'Cordas',    'Violino',            0,    '11111111'],
+        ['Lucas Oliveira',       'Cordas',    'Violino',            1,    '10100110'],
+        ['Mariana Lima',         'Cordas',    'Viola',              2,    '11011111'],
+        ['Pedro Henrique Alves', 'Cordas',    'Viola',              3,    '11111101'],
+        ['Clara Mendonça',       'Cordas',    'Violoncelo',         null, '01101010'],
+        ['Rafael Costa',         'Cordas',    'Contrabaixo',        null, '00100000'],
+        ['Beatriz Nogueira',     'Madeiras',  'Flauta transversal', null, '11111011'],
+        ['Otávio Ramos',         'Madeiras',  'Clarinete',          null, '10011010'],
+        ['Felipe Andrade',       'Metais',    'Trompete',           null, '01000000'],
+        ['Larissa Pinto',        'Metais',    'Trombone',           null, '11110111'],
+        ['Gabriel Rocha',        'Percussão', 'Bateria e tímpanos', 5,    '11111110'],
+        ['Helena Duarte',        'Teclado',   'Piano',              null, null],
+    ];
+    $insMembro = $pdo->prepare(
+        'INSERT INTO orquestra_membros (nome, naipe, instrumento, aluno_id, criado_em) VALUES (?, ?, ?, ?, ?)'
+    );
+    $alunoIds = $pdo->query('SELECT id FROM alunos ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+
+    // 8 sábados passados (do mais antigo para o mais recente)
+    $ensaios = [];
+    $insEnsaio = $pdo->prepare('INSERT INTO orquestra_ensaios (data) VALUES (?)');
+    for ($s = 8; $s >= 1; $s--) {
+        $data = date('Y-m-d', strtotime("last saturday -" . ($s - 1) . " week"));
+        $insEnsaio->execute([$data]);
+        $ensaios[] = $pdo->lastInsertId();
+    }
+    $insPresencaOrq = $pdo->prepare('INSERT INTO orquestra_presencas (ensaio_id, membro_id, presente) VALUES (?, ?, ?)');
+    foreach ($membros as [$nome, $naipe, $instrumento, $aluno, $presencas]) {
+        $entrada = $presencas === null ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', strtotime('-90 days'));
+        $insMembro->execute([$nome, $naipe, $instrumento, $aluno === null ? null : $alunoIds[$aluno], $entrada]);
+        $membroId = $pdo->lastInsertId();
+        if ($presencas !== null) {
+            foreach (str_split($presencas) as $i => $veio) {
+                $insPresencaOrq->execute([$ensaios[$i], $membroId, (int) $veio]);
+            }
+        }
+    }
 }

@@ -411,3 +411,9 @@ input[type=checkbox] { accent-color: var(--tinta); width: 16px; height: 16px; ve
     .evento { grid-template-columns: 56px 1fr; }
     .evento .acoes { grid-column: 1 / -1; }
 }
+
+/* ---------- Orquestra: bolinhas dos últimos ensaios ---------- */
+.bolinhas { display: inline-flex; gap: 4px; }
+.bolinhas i { width: 12px; height: 12px; border-radius: 99px; background: var(--cinza); border: 1px solid var(--linha); }
+.bolinhas .b-veio { background: var(--verde); border-color: var(--verde); }
+.bolinhas .b-faltou { background: var(--rosa); border-color: var(--rosa); }
