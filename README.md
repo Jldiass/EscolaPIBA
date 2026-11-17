@@ -1,53 +1,59 @@
 # 🎵 Música PIBA – EscolaPIBA
 
-Sistema web de gestão da **Escola de Música comunitária da PIBA**: alunos, turmas, chamada (frequência), notas com média automática, boletim e agenda de apresentações.
+Sistema web de gestão da **Escola de Música comunitária da PIBA**, para a **secretaria** e os **professores**:
+
+- 👩‍🎓 **Alunos:** cadastro completo, ficha individual e matrícula com professor, dia, horário e mensalidade
+- 🎻 **Professores:** cada um com o próprio **login** e as suas **especialidades** (violino, viola, teoria musical, bateria…)
+- 🗓 **Agenda semanal:** cada professor vê as aulas da semana dele; a secretaria vê a de todos
+- ✓ **Chamada:** o professor marca presença ou falta em cada aula
+- 📊 **Frequência:** percentual de presença por aluno, com alerta abaixo de 75%
+- 💰 **Financeiro:** quanto cada professor recebe pelos seus alunos e **quem já repassou** a parte da escola no mês
 
 Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e Difusão Cultural**, curso de Ciência da Computação (Anhanguera).
 
-![Tela inicial](docs/img/etapa1-inicio.png)
+![Painel da secretaria](docs/img/02-painel-secretaria.png)
 
-## Tecnologias
+## Como rodar
 
-| Camada | Tecnologia | Por quê |
-|---|---|---|
-| Telas | HTML + CSS | Simples, roda em qualquer navegador e no celular |
-| Lógica | PHP 8 | Linguagem de servidor estudada no curso |
-| Banco de dados | SQLite (via PDO) | Um único arquivo, não precisa instalar servidor de banco |
-
-## Como rodar no seu computador
-
-1. Instale o PHP 8 (por exemplo pelo [XAMPP](https://www.apachefriends.org/pt_br/)) e confira se a extensão `pdo_sqlite` está ativa no `php.ini`.
-2. Baixe este repositório (`git clone https://github.com/Jldiass/EscolaPIBA.git`).
-3. Dentro da pasta, rode:
+1. Instale o **PHP 8** (por exemplo pelo [XAMPP](https://www.apachefriends.org/pt_br/)) e confira se a extensão `pdo_sqlite` está ativa no `php.ini`.
+2. Baixe o repositório:
+   ```
+   git clone https://github.com/Jldiass/EscolaPIBA.git
+   cd EscolaPIBA
+   ```
+3. Inicie o servidor:
    ```
    php -S localhost:8000
    ```
-4. Abra http://localhost:8000 no navegador.
+4. Abra http://localhost:8000
 
-Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com **alunos fictícios** para demonstração.
+Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com dados de demonstração.
 
-## Estrutura de pastas
+### Logins de teste (senha de todos: `piba123`)
 
-```
-EscolaPIBA/
-├── index.php            Painel inicial (números da escola)
-├── alunos/              Cadastro de alunos (listar, criar, editar, excluir)
-├── config/database.php  Conexão com o banco SQLite
-├── includes/            Topo (menu lateral) e rodapé, usados em todas as páginas
-├── assets/              CSS e imagens (logo da PIBA)
-├── sql/                 Criação das tabelas e dados fictícios
-├── database/            Onde o arquivo do banco é gerado (não vai para o GitHub)
-└── docs/                Explicação de cada etapa do desenvolvimento
-```
+| Login | Perfil | O que vê |
+|---|---|---|
+| `secretaria` | Secretaria | Tudo: alunos, professores, agenda geral, chamada, frequência e financeiro |
+| `thiago` | Professor de Violino | Só os alunos e a agenda dele |
+| `geovana` | Professora de Viola | Só os alunos e a agenda dela |
+| `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |
 
-## Etapas do desenvolvimento
+> ⚠️ Antes de usar de verdade na escola, troque as senhas de todos (Professores → Editar) e apague o arquivo `database/escola.sqlite` de demonstração.
 
-- [x] **Etapa 1** – Estrutura, visual e cadastro de alunos ([explicação](docs/ETAPA-1.md))
-- [ ] Etapa 2 – Turmas e matrícula de alunos
-- [ ] Etapa 3 – Chamada / frequência
-- [ ] Etapa 4 – Notas, média automática e boletim
-- [ ] Etapa 5 – Agenda de apresentações e relatório de impacto
+## Tecnologias
 
-## Privacidade
+| Camada | Tecnologia |
+|---|---|
+| Telas | HTML5 + CSS3 (sem framework) |
+| Lógica no servidor | PHP 8 |
+| Banco de dados | SQLite, acessado com PDO |
+| Login | Sessão PHP + senhas com `password_hash` |
 
-O repositório contém **apenas dados fictícios**. Os dados reais dos alunos ficam somente no arquivo do banco, no computador da escola, e nunca são enviados ao GitHub (`.gitignore`).
+## Documentação
+
+- 📘 [Documentação do sistema](docs/DOCUMENTACAO.md): requisitos, perfis, regras de negócio, banco de dados e telas
+- 🧑‍💻 [Como o código funciona](docs/COMO-O-CODIGO-FUNCIONA.md): explicação de cada arquivo, segurança e exercícios
+
+## Privacidade (LGPD)
+
+Os **alunos** do repositório são **fictícios**. Os dados reais ficam só no arquivo do banco, no computador da escola, que nunca vai para o GitHub (`.gitignore`). Cada professor só enxerga os próprios alunos.

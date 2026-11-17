@@ -8,8 +8,8 @@
  * servidor de banco: ideal para uma escola pequena.
  *
  * Na primeira vez que o sistema roda, o arquivo ainda não existe.
- * Então criamos as tabelas (sql/schema.sql) e inserimos alguns
- * alunos fictícios (sql/dados_ficticios.sql) para demonstração.
+ * Então criamos as tabelas (sql/schema.sql) e inserimos dados
+ * fictícios (sql/dados_ficticios.php) para demonstração.
  */
 
 function conectar(): PDO
@@ -35,7 +35,8 @@ function conectar(): PDO
     $pdo->exec(file_get_contents(__DIR__ . '/../sql/schema.sql'));
 
     if ($bancoNovo) {
-        $pdo->exec(file_get_contents(__DIR__ . '/../sql/dados_ficticios.sql'));
+        require_once __DIR__ . '/../sql/dados_ficticios.php';
+        inserirDadosFicticios($pdo);
     }
 
     return $pdo;
@@ -48,4 +49,42 @@ function conectar(): PDO
 function e(?string $texto): string
 {
     return htmlspecialchars($texto ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+/** Formata número como dinheiro: 1234.5 -> "R$ 1.234,50" */
+function dinheiro(float $valor): string
+{
+    return 'R$ ' . number_format($valor, 2, ',', '.');
+}
+
+/** Nomes dos dias da semana (1 = segunda ... 7 = domingo, padrão ISO) */
+const DIAS_SEMANA = [
+    1 => 'Segunda', 2 => 'Terça', 3 => 'Quarta', 4 => 'Quinta',
+    5 => 'Sexta', 6 => 'Sábado', 7 => 'Domingo',
+];
+
+/** Lê um parâmetro da tabela configuracoes */
+function configuracao(string $chave, string $padrao = ''): string
+{
+    $stmt = conectar()->prepare('SELECT valor FROM configuracoes WHERE chave = ?');
+    $stmt->execute([$chave]);
+    $valor = $stmt->fetchColumn();
+    return $valor === false ? $padrao : $valor;
+}
+
+/** Nome do mês em português: '2026-11' -> 'Novembro/2026' */
+function nomeMes(string $anoMes): string
+{
+    $meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho',
+              'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    [$ano, $mes] = explode('-', $anoMes);
+    return $meses[(int) $mes - 1] . '/' . $ano;
+}
+
+/**
+ * Especialidades de um professor: "Teoria musical, Bateria" -> ['Teoria musical', 'Bateria']
+ */
+function especialidades(?string $texto): array
+{
+    return array_values(array_filter(array_map('trim', explode(',', $texto ?? ''))));
 }

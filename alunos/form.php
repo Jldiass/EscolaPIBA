@@ -8,12 +8,13 @@
  * Quando o usuário clica em Salvar, o formulário é enviado (POST)
  * para esta mesma página, que valida e grava no banco.
  */
-require __DIR__ . '/../config/database.php';
+require __DIR__ . '/../includes/auth.php';
 
+exigirSecretaria(); // só a secretaria cadastra e edita alunos
 $pdo = conectar();
 
-$instrumentos = ['Flauta transversal', 'Flauta doce', 'Violão', 'Violino', 'Teclado',
-                 'Bateria', 'Saxofone', 'Trompete', 'Canto coral', 'Outro'];
+// Instrumentos/especialidades ensinados hoje na escola
+$instrumentos = ['Violino', 'Viola', 'Bateria', 'Teoria musical', 'Outro'];
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $erros = [];
@@ -37,6 +38,7 @@ if ($id) {
 
 // O formulário foi enviado?
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verificarCsrf();
     // Pega o que foi digitado
     $aluno['nome']            = trim($_POST['nome'] ?? '');
     $aluno['data_nascimento'] = $_POST['data_nascimento'] ?? '';
@@ -79,24 +81,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  instrumento = :instrumento, ativo = :ativo
                  WHERE id = :id'
             )->execute($dados);
-            $msg = 'editado';
+            header('Location: ver.php?id=' . $id . '&msg=editado');
+            exit;
         } else {
             $pdo->prepare(
                 'INSERT INTO alunos (nome, data_nascimento, responsavel, telefone, instrumento, ativo)
                  VALUES (:nome, :data_nascimento, :responsavel, :telefone, :instrumento, :ativo)'
             )->execute($dados);
-            $msg = 'criado';
+            // Vai direto para a ficha do aluno, onde a secretaria faz a matrícula
+            header('Location: ver.php?id=' . $pdo->lastInsertId() . '&msg=criado');
+            exit;
         }
-
-        // Redireciona para a lista (padrão Post/Redirect/Get: evita salvar duas vezes ao atualizar a página)
-        header('Location: index.php?msg=' . $msg);
-        exit;
+        // Os redirecionamentos seguem o padrão Post/Redirect/Get:
+        // evitam salvar duas vezes se a pessoa apertar F5.
     }
 }
 
 $titulo = $id ? 'Editar aluno' : 'Novo aluno';
 $menu   = 'alunos';
-$raiz   = '../';
 require __DIR__ . '/../includes/header.php';
 ?>
 
@@ -105,7 +107,7 @@ require __DIR__ . '/../includes/header.php';
         <h1><?= $id ? '✎ Editar aluno' : '♪ Novo aluno' ?></h1>
         <p>Campos com * são obrigatórios.</p>
     </div>
-    <a class="botao" href="index.php">← Voltar</a>
+    <a class="botao" href="<?= $id ? 'ver.php?id=' . $id : 'index.php' ?>">← Voltar</a>
 </div>
 
 <?php if ($erros): ?>
@@ -118,6 +120,7 @@ require __DIR__ . '/../includes/header.php';
 
 <section class="cartao">
     <form class="formulario" method="post">
+        <?= campoCsrf() ?>
         <div class="campo campo-inteiro">
             <label for="nome">Nome completo *</label>
             <input id="nome" name="nome" required value="<?= e($aluno['nome']) ?>">
