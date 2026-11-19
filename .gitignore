@@ -1,0 +1,4 @@
+# O banco SQLite é gerado automaticamente na primeira execução
+database/*.sqlite
+# PDFs do banco de partituras (enviados pelo sistema)
+database/partituras/

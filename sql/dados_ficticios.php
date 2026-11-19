@@ -1,0 +1,198 @@
+<?php
+/**
+ * Dados FICTÍCIOS para demonstração (nunca use dados reais aqui).
+ *
+ * É um arquivo PHP (e não .sql) porque as senhas precisam passar
+ * por password_hash() antes de ir para o banco.
+ *
+ * Logins de teste (senha de todos: piba123):
+ *   admin       -> ADMINISTRADOR: cadastra e vê tudo (alunos, professores, financeiro...)
+ *   thiago      -> professor de Violino
+ *   geovana     -> professora de Viola
+ *   elias       -> Pastor Elias, Ministro de Música: Teoria musical e Bateria
+ *
+ * Os PROFESSORES são os reais da escola (só o primeiro nome).
+ * Os ALUNOS são todos inventados.
+ */
+
+function inserirDadosFicticios(PDO $pdo): void
+{
+    $senha = password_hash('piba123', PASSWORD_DEFAULT);
+
+    $usuario = $pdo->prepare(
+        'INSERT INTO usuarios (nome, login, senha_hash, perfil, telefone, instrumentos)
+         VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    $usuario->execute(['Administração', 'admin', $senha, 'admin', null, null]);
+    // Professores da escola, cada um com sua(s) especialidade(s)
+    $usuario->execute(['Thiago',        'thiago', $senha, 'professor', null, 'Violino']);
+    $thiago = $pdo->lastInsertId();
+    $usuario->execute(['Geovana',       'geovana', $senha, 'professor', null, 'Viola']);
+    $geovana = $pdo->lastInsertId();
+    $usuario->execute(['Pastor Elias',  'elias', $senha, 'professor', null, 'Teoria musical, Bateria']);
+    $elias = $pdo->lastInsertId();
+
+    // [nome, nascimento, responsável, telefone, instrumento, professor, dia, início, fim, mensalidade, bolsista]
+    // Teoria musical é bancada pela igreja (mensalidade 0). O Pedro tem bolsa da igreja na viola.
+    $alunos = [
+        ['Ana Beatriz Souza',    '2012-03-14', 'Carla Souza',    '(00) 90000-0001', 'Violino',        $thiago,  1, '14:00', '15:00', 80],
+        ['Lucas Oliveira',       '2010-07-22', 'Marcos Oliveira','(00) 90000-0002', 'Violino',        $thiago,  3, '15:00', '16:00', 80],
+        ['Mariana Lima',         '2008-11-05', null,             '(00) 90000-0003', 'Viola',          $geovana, 2, '18:00', '19:00', 80],
+        ['Pedro Henrique Alves', '2013-01-30', 'Juliana Alves',  '(00) 90000-0004', 'Viola',          $geovana, 4, '14:00', '15:00', 80, 1],
+        ['Sofia Martins',        '2011-09-18', 'Renata Martins', '(00) 90000-0005', 'Teoria musical', $elias,   6, '09:00', '10:00', 0],
+        ['Gabriel Rocha',        '2009-05-02', 'Paulo Rocha',    '(00) 90000-0006', 'Bateria',        $elias,   6, '10:00', '11:00', 100],
+        ['Isabela Ferreira',     '2006-12-11', null,             '(00) 90000-0007', 'Teoria musical', $elias,   6, '11:00', '12:00', 0],
+        ['João Vitor Ramos',     '2014-08-25', 'Elaine Ramos',   '(00) 90000-0008', 'Bateria',        $elias,   5, '19:00', '20:00', 100],
+    ];
+
+    $insAluno = $pdo->prepare(
+        'INSERT INTO alunos (nome, data_nascimento, responsavel, telefone, instrumento) VALUES (?, ?, ?, ?, ?)'
+    );
+    $insMatricula = $pdo->prepare(
+        'INSERT INTO matriculas (aluno_id, professor_id, instrumento, dia_semana, hora_inicio, hora_fim, mensalidade, bolsista)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    $matriculas = [];
+    $insPresenca = $pdo->prepare('INSERT INTO presencas (matricula_id, data, presente) VALUES (?, ?, ?)');
+
+    foreach ($alunos as $i => $a) {
+        [$nome, $nasc, $resp, $tel, $inst, $prof, $dia, $ini, $fim, $valor] = $a;
+        $bolsista = $a[10] ?? 0;
+        $insAluno->execute([$nome, $nasc, $resp, $tel, $inst]);
+        $insMatricula->execute([$pdo->lastInsertId(), $prof, $inst, $dia, $ini, $fim, $valor, $bolsista]);
+        $matriculaId = $pdo->lastInsertId();
+        $matriculas[$i] = $matriculaId;
+
+        // Chamadas das 4 últimas semanas (algumas faltas para o relatório ficar interessante)
+        for ($semana = 4; $semana >= 1; $semana--) {
+            $data = new DateTime("-$semana week");
+            $data->setISODate((int) $data->format('o'), (int) $data->format('W'), $dia);
+            // João Vitor (índice 7) faltou nas 2 últimas semanas: aparece em alerta na frequência
+            $faltou = ($i + $semana) % 5 === 0 || ($i === 7 && $semana <= 2);
+            $insPresenca->execute([$matriculaId, $data->format('Y-m-d'), $faltou ? 0 : 1]);
+        }
+    }
+
+    // Avisos de exemplo: um evento social, um interno e um lembrete
+    $aviso = $pdo->prepare(
+        'INSERT INTO avisos (tipo, titulo, descricao, data, hora, local, valido_ate, criado_por) VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
+    );
+    $aviso->execute(['social', 'Recital de fim de ano', 'Apresentação dos alunos para as famílias e a comunidade.',
+                     date('Y-m-d', strtotime('+18 days')), '19:00', 'Templo principal', null]);
+    $aviso->execute(['interno', 'Reunião de professores', 'Planejamento do próximo semestre.',
+                     date('Y-m-d', strtotime('+5 days')), '20:00', 'Sala 102', null]);
+    $aviso->execute(['lembrete', 'Não usar a sala 101', 'Sala em reforma. As aulas foram para a sala 103.',
+                     date('Y-m-d'), null, 'Sala 101', date('Y-m-d', strtotime('+30 days'))]);
+
+    // A escola fica com 30% da mensalidade; o professor fica com 70%
+    $pdo->exec("INSERT INTO configuracoes (chave, valor) VALUES ('percentual_escola', '30')");
+
+    // Mês passado: Thiago e Geovana já repassaram, Pastor Elias ainda não (30% de 2 alunos de bateria)
+    $mesPassado = (new DateTime('first day of last month'))->format('Y-m');
+    $repasse = $pdo->prepare(
+        'INSERT INTO repasses (professor_id, mes, valor, data_pagamento) VALUES (?, ?, ?, ?)'
+    );
+    $repasse->execute([$thiago,  $mesPassado, 48.0, $mesPassado . '-10']);
+    $repasse->execute([$geovana, $mesPassado, 24.0, $mesPassado . '-12']);  // só a Mariana paga (o Pedro é bolsista)
+
+    // Mensalidades informadas pelos professores (só aulas cobradas: 0, 1, 2, 5 e 7)
+    //   mês passado: todos pagaram, menos o João Vitor (índice 7)
+    //   este mês: Lucas (1) e João Vitor (7) não pagaram; Mariana (2) ainda sem informação
+    $mesAtual = date('Y-m');
+    $pagamento = $pdo->prepare('INSERT INTO pagamentos (matricula_id, mes, pago, observacao) VALUES (?, ?, ?, ?)');
+    foreach ($matriculas as $i => $matriculaId) {
+        if (in_array($i, [4, 6], true)) {
+            continue;   // teoria gratuita: não tem mensalidade
+        }
+        if ($i === 3) {   // Pedro é bolsista: a igreja paga a bolsa. Mês passado e este mês ainda não chegaram.
+            $pagamento->execute([$matriculaId, $mesPassado, 0, 'Bolsa: aguardando repasse da igreja']);
+            $pagamento->execute([$matriculaId, $mesAtual, 0, null]);
+            continue;
+        }
+        $pagamento->execute([$matriculaId, $mesPassado, $i === 7 ? 0 : 1, $i === 7 ? 'Família pediu para pagar depois' : null]);
+        if (in_array($i, [1, 7], true)) {
+            $pagamento->execute([$matriculaId, $mesAtual, 0, null]);
+        } elseif ($i !== 2) {
+            $pagamento->execute([$matriculaId, $mesAtual, 1, null]);
+        }
+    }
+
+    // Orquestra: maestros. O Pastor Elias rege e faz a chamada dos ensaios (sábado à tarde).
+    $maestro = $pdo->prepare('INSERT INTO orquestra_maestros (nome, funcao, telefone, usuario_id) VALUES (?, ?, ?, ?)');
+    $maestro->execute(['Pastor Elias',  'Regente titular',    '(00) 90000-0100', $elias]);
+    $maestro->execute(['Débora Lins',   'Regente assistente', '(00) 90000-0101', null]);
+    $maestro->execute(['Ana Beatriz Souza', 'Spalla',         '(00) 90000-0001', null]);
+
+    // [nome, naipe, instrumento, aluno (índice em $alunos ou null), presença nos 8 últimos ensaios]
+    //   1 = veio, 0 = faltou; null na presença = entrou agora (status "Novo")
+    $membros = [
+        ['Ana Beatriz Souza',    'Cordas',    'Violino',            0,    '11111111'],
+        ['Lucas Oliveira',       'Cordas',    'Violino',            1,    '10100110'],
+        ['Mariana Lima',         'Cordas',    'Viola',              2,    '11011111'],
+        ['Pedro Henrique Alves', 'Cordas',    'Viola',              3,    '11111101'],
+        ['Clara Mendonça',       'Cordas',    'Violoncelo',         null, '01101010'],
+        ['Rafael Costa',         'Cordas',    'Contrabaixo',        null, '00100000'],
+        ['Beatriz Nogueira',     'Madeiras',  'Flauta transversal', null, '11111011'],
+        ['Otávio Ramos',         'Madeiras',  'Clarinete',          null, '10011010'],
+        ['Felipe Andrade',       'Metais',    'Trompete',           null, '01000000'],
+        ['Larissa Pinto',        'Metais',    'Trombone',           null, '11110111'],
+        ['Gabriel Rocha',        'Percussão', 'Bateria e tímpanos', 5,    '11111110'],
+        ['Helena Duarte',        'Teclado',   'Piano',              null, null],
+    ];
+    $insMembro = $pdo->prepare(
+        'INSERT INTO orquestra_membros (nome, naipe, instrumento, aluno_id, criado_em, telefone) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    $alunoIds = $pdo->query('SELECT id FROM alunos ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+
+    // 8 sábados passados (do mais antigo para o mais recente)
+    $ensaios = [];
+    $insEnsaio = $pdo->prepare('INSERT INTO orquestra_ensaios (data) VALUES (?)');
+    for ($s = 8; $s >= 1; $s--) {
+        $data = date('Y-m-d', strtotime("last saturday -" . ($s - 1) . " week"));
+        $insEnsaio->execute([$data]);
+        $ensaios[] = $pdo->lastInsertId();
+    }
+    $insPresencaOrq = $pdo->prepare('INSERT INTO orquestra_presencas (ensaio_id, membro_id, presente) VALUES (?, ?, ?)');
+    foreach ($membros as $n => [$nome, $naipe, $instrumento, $aluno, $presencas]) {
+        $telefone = sprintf('(00) 90000-%04d', 200 + $n);   // telefones fictícios
+        $entrada = $presencas === null ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', strtotime('-90 days'));
+        $insMembro->execute([$nome, $naipe, $instrumento, $aluno === null ? null : $alunoIds[$aluno], $entrada, $telefone]);
+        $membroId = $pdo->lastInsertId();
+        if ($presencas !== null) {
+            foreach (str_split($presencas) as $i => $veio) {
+                $insPresencaOrq->execute([$ensaios[$i], $membroId, (int) $veio]);
+            }
+        }
+    }
+
+    // Banco de partituras: pastas padrão + uma pasta criada pelo admin, com PDFs de exemplo
+    require_once __DIR__ . '/../includes/partituras.php';
+    garantirPastasPadrao($pdo);
+    array_map('unlink', glob(pastaArquivosPartituras() . '/*.pdf'));   // banco novo: PDFs antigos ficaram órfãos
+    $pdo->prepare("INSERT INTO partituras_pastas (nome, descricao, icone, criado_por) VALUES (?, ?, '🎄', 1)")
+        ->execute(['Apresentação de Natal', 'Repertório da apresentação de fim de ano aberta à comunidade.']);
+    $idPasta = array_column($pdo->query('SELECT id, nome FROM partituras_pastas')->fetchAll(), 'id', 'nome');
+    // [pasta, título, autor, instrumento, nível, enviado por]
+    $acervo = [
+        ['Orquestra',             'Ode à Alegria (9ª Sinfonia)',          'L. van Beethoven',      'Orquestra completa',     'basico',        $elias],
+        ['Orquestra',             'Canon em Ré',                          'J. Pachelbel',          'Cordas',                 'intermediario', $elias],
+        ['Orquestra',             'Marcha Radetzky',                      'J. Strauss (pai)',      'Orquestra completa',     'intermediario', $elias],
+        ['Orquestra',             'A Primavera (As Quatro Estações)',     'A. Vivaldi',            'Violino solo e cordas',  'avancado',      $elias],
+        ['Métodos de ensino',     'Violino: primeiras peças e escalas',   'Apostila do prof. Thiago', 'Violino',             'basico',        $thiago],
+        ['Métodos de ensino',     'Violino: estudos em segunda posição',  'Apostila do prof. Thiago', 'Violino',             'intermediario', $thiago],
+        ['Métodos de ensino',     'Viola: leitura na clave de dó',        'Apostila da prof. Geovana', 'Viola',              'basico',        $geovana],
+        ['Métodos de ensino',     'Teoria musical: leitura rítmica',      'Apostila do Pastor Elias', 'Teoria musical',      'basico',        $elias],
+        ['Apresentação de Natal', 'Jingle Bells (arranjo para orquestra)','J. Pierpont',           'Orquestra completa',     'basico',        1],
+        ['Apresentação de Natal', 'Valsa das Flores (O Quebra-Nozes)',    'P. I. Tchaikovsky',     'Orquestra completa',     'avancado',      1],
+    ];
+    $insPartitura = $pdo->prepare('INSERT INTO partituras (pasta_id, titulo, autor, instrumento, nivel, arquivo, tamanho, enviado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    foreach ($acervo as [$pasta, $tituloPartitura, $autor, $instrumento, $nivel, $quem]) {
+        $pdf = pdfDeExemplo($tituloPartitura, [
+            "$autor  ·  $instrumento  ·  nível " . NIVEIS_PARTITURA[$nivel][0],
+            'Escola de Música PIBA - acervo da escola (arquivo de exemplo para demonstração)',
+        ]);
+        $arquivo = bin2hex(random_bytes(16)) . '.pdf';
+        file_put_contents(pastaArquivosPartituras() . '/' . $arquivo, $pdf);
+        $insPartitura->execute([$idPasta[$pasta], $tituloPartitura, $autor, $instrumento, $nivel, $arquivo, strlen($pdf), $quem]);
+    }
+}
