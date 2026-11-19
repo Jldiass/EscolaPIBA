@@ -252,7 +252,8 @@ confere($codigo === 400, 'CSRF estranho é recusado');
 
 // ---------------------------------------------------------------- 9. log do servidor
 $logTexto = (string) file_get_contents($log);
-preg_match_all('/PHP (Warning|Notice|Deprecated):.*$/m', $logTexto, $avisos);
+// Só conta avisos do código do sistema (ignora avisos da instalação do PHP, como o do JIT)
+preg_match_all('/PHP (Warning|Notice|Deprecated):.* in .+\.php on line \d+$/m', $logTexto, $avisos);
 confere(!$avisos[0], 'nenhum aviso do PHP no log' . ($avisos[0] ? ":\n    " . implode("\n    ", array_unique($avisos[0])) : ''));
 
 // ---------------------------------------------------------------- resultado
