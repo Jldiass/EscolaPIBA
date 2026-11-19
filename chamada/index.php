@@ -13,11 +13,10 @@ $pdo = conectar();
 
 // Data da chamada (AAAA-MM-DD). Se vier inválida ou no futuro, usa hoje.
 $data = $_GET['data'] ?? date('Y-m-d');
-$dt = DateTime::createFromFormat('Y-m-d', $data);
-if (!$dt || $data > date('Y-m-d')) {
+if (!dataValida($data) || $data > date('Y-m-d')) {
     $data = date('Y-m-d');
-    $dt = new DateTime($data);
 }
+$dt = new DateTime($data);
 $diaSemana = (int) $dt->format('N');
 
 $professorId = ehAdmin() ? ((int) ($_GET['professor'] ?? 0) ?: null) : (int) $usuario['id'];

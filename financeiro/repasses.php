@@ -17,7 +17,7 @@ $usuario = exigirAdmin();
 $pdo = conectar();
 
 $mes = $_GET['mes'] ?? date('Y-m');
-if (!preg_match('/^\d{4}-\d{2}$/', $mes)) {
+if (!mesValido($mes)) {
     $mes = date('Y-m');
 }
 
@@ -25,26 +25,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificarCsrf();
     $acao = $_POST['acao'] ?? '';
 
-    if ($acao === 'repassar') {
-        $pdo->prepare(
-            'INSERT INTO repasses (professor_id, mes, valor, data_pagamento, observacao, registrado_por)
-             VALUES (?, ?, ?, ?, ?, ?)
-             ON CONFLICT (professor_id, mes) DO UPDATE SET valor = excluded.valor,
-                 data_pagamento = excluded.data_pagamento, observacao = excluded.observacao'
-        )->execute([
-            (int) $_POST['professor_id'], $mes, (float) $_POST['valor'],
-            $_POST['data_pagamento'] ?: date('Y-m-d'), trim($_POST['observacao'] ?? '') ?: null, $usuario['id'],
-        ]);
-        $msg = 'Repasse registrado.';
-    } elseif ($acao === 'desfazer') {
+    $professorId = (int) ($_POST['professor_id'] ?? 0);
+    // O professor precisa existir (senão o banco recusa o registro)
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE id = ? AND perfil = 'professor'");
+    $stmt->execute([$professorId]);
+    $professorExiste = (bool) $stmt->fetchColumn();
+
+    if ($acao === 'repassar' && $professorExiste) {
+        $valor = (float) str_replace(',', '.', (string) ($_POST['valor'] ?? '0'));
+        $dataPagamento = $_POST['data_pagamento'] ?? '';
+        if ($valor <= 0) {
+            $msg = 'erro_valor';
+        } else {
+            $pdo->prepare(
+                'INSERT INTO repasses (professor_id, mes, valor, data_pagamento, observacao, registrado_por)
+                 VALUES (?, ?, ?, ?, ?, ?)
+                 ON CONFLICT (professor_id, mes) DO UPDATE SET valor = excluded.valor,
+                     data_pagamento = excluded.data_pagamento, observacao = excluded.observacao'
+            )->execute([
+                $professorId, $mes, $valor,
+                dataValida($dataPagamento) ? $dataPagamento : date('Y-m-d'),
+                trim((string) ($_POST['observacao'] ?? '')) ?: null, $usuario['id'],
+            ]);
+            $msg = 'repassado';
+        }
+    } elseif ($acao === 'desfazer' && $professorExiste) {
         $pdo->prepare('DELETE FROM repasses WHERE professor_id = ? AND mes = ?')
-            ->execute([(int) $_POST['professor_id'], $mes]);
-        $msg = 'Repasse desfeito: o professor voltou para pendente.';
-    } elseif ($acao === 'percentual') {
+            ->execute([$professorId, $mes]);
+        $msg = 'desfeito';
+    } elseif ($acao === 'percentual' && is_numeric($_POST['percentual'] ?? null)) {
         $percentual = max(0, min(100, (float) $_POST['percentual']));
         $pdo->prepare("INSERT INTO configuracoes (chave, valor) VALUES ('percentual_escola', ?)
                        ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor")->execute([$percentual]);
-        $msg = 'Percentual da escola atualizado para ' . $percentual . '%.';
+        $msg = 'percentual';
     }
     header('Location: repasses.php?mes=' . $mes . '&msg=' . urlencode($msg ?? ''));
     exit;
@@ -80,8 +93,18 @@ require __DIR__ . '/../includes/header.php';
 
 <?php $aba = 'repasses'; require __DIR__ . '/../includes/abas-financeiro.php'; ?>
 
-<?php if (!empty($_GET['msg'])): ?>
-    <div class="alerta alerta-sucesso"><?= e($_GET['msg']) ?></div>
+<?php
+// Mensagens fixas (o texto não vem da URL, para ninguém montar um link com recado falso)
+$mensagens = [
+    'repassado'  => ['sucesso', 'Repasse registrado.'],
+    'desfeito'   => ['sucesso', 'Repasse desfeito: o professor voltou para pendente.'],
+    'percentual' => ['sucesso', 'Percentual da escola atualizado para ' . $percentual . '%.'],
+    'erro_valor' => ['erro', 'Informe um valor de repasse maior que zero.'],
+];
+[$tipoMsg, $textoMsg] = $mensagens[$_GET['msg'] ?? ''] ?? [null, null];
+?>
+<?php if ($textoMsg): ?>
+    <div class="alerta alerta-<?= $tipoMsg ?>"><?= e($textoMsg) ?></div>
 <?php endif; ?>
 
 <section class="indicadores">

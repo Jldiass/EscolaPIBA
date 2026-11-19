@@ -13,7 +13,7 @@ const FREQUENCIA_MINIMA = 75; // % abaixo do qual o aluno fica em alerta
 
 $inicio = $_GET['inicio'] ?? date('Y-m-01');                       // padrão: começo do mês
 $fim    = $_GET['fim']    ?? date('Y-m-d');                        // até hoje
-if (!DateTime::createFromFormat('Y-m-d', $inicio) || !DateTime::createFromFormat('Y-m-d', $fim)) {
+if (!dataValida($inicio) || !dataValida($fim) || $inicio > $fim) {
     [$inicio, $fim] = [date('Y-m-01'), date('Y-m-d')];
 }
 

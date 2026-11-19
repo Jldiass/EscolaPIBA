@@ -12,11 +12,10 @@ $pdo = conectar();
 
 // Data do ensaio (AAAA-MM-DD). Inválida ou no futuro -> hoje.
 $data = $_GET['data'] ?? date('Y-m-d');
-$dt = DateTime::createFromFormat('Y-m-d', $data);
-if (!$dt || $dt->format('Y-m-d') !== $data || $data > date('Y-m-d')) {
+if (!dataValida($data) || $data > date('Y-m-d')) {
     $data = date('Y-m-d');
-    $dt = new DateTime($data);
 }
+$dt = new DateTime($data);
 
 $stmt = $pdo->prepare('SELECT * FROM orquestra_ensaios WHERE data = ?');
 $stmt->execute([$data]);

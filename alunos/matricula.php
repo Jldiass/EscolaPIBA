@@ -19,6 +19,15 @@ $pdo = conectar();
 $alunoId = (int) ($_POST['aluno_id'] ?? 0);
 $acao = $_POST['acao'] ?? '';
 
+// O aluno precisa existir
+$stmt = $pdo->prepare('SELECT COUNT(*) FROM alunos WHERE id = ?');
+$stmt->execute([$alunoId]);
+if (!$stmt->fetchColumn()) {
+    http_response_code(404);
+    exit('Aluno não encontrado.');
+}
+$matriculaId = (int) ($_POST['matricula_id'] ?? 0);
+
 /** Volta para a ficha do aluno com uma mensagem. */
 function voltar(int $alunoId, string $parametro): void
 {
@@ -26,15 +35,33 @@ function voltar(int $alunoId, string $parametro): void
     exit;
 }
 
+if ($acao === 'reativar') {
+    // Antes de reativar, confere se o horário não bate com outra aula do professor
+    $stmt = $pdo->prepare('SELECT * FROM matriculas WHERE id = ? AND aluno_id = ?');
+    $stmt->execute([$matriculaId, $alunoId]);
+    $m = $stmt->fetch();
+    if ($m) {
+        $stmt = $pdo->prepare(
+            'SELECT a.nome FROM matriculas x JOIN alunos a ON a.id = x.aluno_id
+             WHERE x.professor_id = ? AND x.dia_semana = ? AND x.ativo = 1 AND x.id <> ?
+               AND x.hora_inicio < ? AND x.hora_fim > ?'
+        );
+        $stmt->execute([$m['professor_id'], $m['dia_semana'], $m['id'], $m['hora_fim'], $m['hora_inicio']]);
+        if ($conflito = $stmt->fetchColumn()) {
+            voltar($alunoId, 'erro=' . urlencode("Não dá para reativar: o professor já tem aula com $conflito nesse horário."));
+        }
+    }
+}
+
 if ($acao === 'encerrar' || $acao === 'reativar') {
     $pdo->prepare('UPDATE matriculas SET ativo = ? WHERE id = ? AND aluno_id = ?')
-        ->execute([$acao === 'reativar' ? 1 : 0, (int) $_POST['matricula_id'], $alunoId]);
+        ->execute([$acao === 'reativar' ? 1 : 0, $matriculaId, $alunoId]);
     voltar($alunoId, 'msg=' . ($acao === 'reativar' ? 'reativada' : 'encerrada'));
 }
 
 if ($acao === 'bolsa') {
     $pdo->prepare('UPDATE matriculas SET bolsista = 1 - bolsista WHERE id = ? AND aluno_id = ?')
-        ->execute([(int) $_POST['matricula_id'], $alunoId]);
+        ->execute([$matriculaId, $alunoId]);
     voltar($alunoId, 'msg=bolsa');
 }
 
@@ -57,6 +84,9 @@ if ($acao === 'criar') {
     $stmt->execute([$professorId]);
     if (!in_array($instrumento, especialidades($stmt->fetchColumn() ?: ''), true)) {
         voltar($alunoId, 'erro=' . urlencode('Esse professor não ensina ' . $instrumento . '.'));
+    }
+    if (!horaValida($inicio) || !horaValida($fim)) {
+        voltar($alunoId, 'erro=' . urlencode('Informe o horário no formato HH:MM.'));
     }
     if ($fim <= $inicio) {
         voltar($alunoId, 'erro=' . urlencode('O horário de fim precisa ser depois do início.'));

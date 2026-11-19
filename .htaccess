@@ -1,0 +1,7 @@
+# Apache (XAMPP): bloqueia arquivos ocultos (.git, .env...) e o roteador do "php -S"
+RedirectMatch 404 "/\.(git|env|ht)"
+<Files "router.php">
+    Require all denied
+</Files>
+# Não lista o conteúdo das pastas
+Options -Indexes

@@ -161,6 +161,13 @@ Feita com **Three.js**: uma *cena*, uma *câmera* e um *renderizador* desenham o
 | `campoCsrf()` + `verificarCsrf()` | Todos os formulários POST |
 | `password_hash` / `password_verify` | Cadastro de professor e login |
 | `exigirLogin()` / `exigirAdmin()` | Topo de cada página |
+| `router.php` (servidor `php -S`) e `.htaccess` (Apache) | Impedem baixar pelo navegador o banco `database/escola.sqlite`, os PDFs guardados, `.git` e as pastas internas |
+| `dataValida()`, `horaValida()`, `mesValido()` | `config/database.php`: recusam datas que não existem (31/02), horários e meses inválidos |
+| `set_exception_handler` | `includes/auth.php`: um erro inesperado mostra uma mensagem amigável, sem expor detalhes do servidor |
+| Cookie de sessão `HttpOnly` + `SameSite=Lax` e pausa de 1 s após senha errada | `includes/auth.php` e `login.php` |
+| Fuso `America/Sao_Paulo` | `config/database.php`: sem ele o PHP usa UTC e, depois das 21h, acharia que já é o dia seguinte |
+
+O teste automático `tests/teste.php` confere tudo isso (rode com `php tests/teste.php`).
 
 ## 9. Exercícios para você fazer (e commitar!)
 

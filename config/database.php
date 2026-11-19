@@ -12,6 +12,10 @@
  * fictícios (sql/dados_ficticios.php) para demonstração.
  */
 
+// Datas e horas no fuso do Brasil (sem isto o PHP usa UTC e, depois das 21h,
+// o sistema acharia que já é o dia seguinte)
+date_default_timezone_set('America/Sao_Paulo');
+
 function conectar(): PDO
 {
     // static: a conexão é criada uma vez só e reaproveitada
@@ -20,7 +24,8 @@ function conectar(): PDO
         return $pdo;
     }
 
-    $arquivo = __DIR__ . '/../database/escola.sqlite';
+    // ESCOLA_DB permite usar outro arquivo (o teste automático usa um banco temporário)
+    $arquivo = getenv('ESCOLA_DB') ?: __DIR__ . '/../database/escola.sqlite';
     $bancoNovo = !file_exists($arquivo);
 
     $pdo = new PDO('sqlite:' . $arquivo);
@@ -55,6 +60,28 @@ function conectar(): PDO
 function e(?string $texto): string
 {
     return htmlspecialchars($texto ?? '', ENT_QUOTES, 'UTF-8');
+}
+
+/** Confere se o texto é uma data AAAA-MM-DD que existe (ex.: recusa 31/02). */
+function dataValida(mixed $d): bool
+{
+    if (!is_string($d)) {
+        return false;
+    }
+    $dt = DateTime::createFromFormat('!Y-m-d', $d);
+    return $dt && $dt->format('Y-m-d') === $d;
+}
+
+/** Confere se o texto é um horário HH:MM válido (00:00 a 23:59). */
+function horaValida(mixed $h): bool
+{
+    return is_string($h) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $h) === 1;
+}
+
+/** Confere se o texto é um mês AAAA-MM válido. */
+function mesValido(mixed $m): bool
+{
+    return is_string($m) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $m) === 1;
 }
 
 /** Formata número como dinheiro: 1234.5 -> "R$ 1.234,50" */

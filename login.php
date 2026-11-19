@@ -10,8 +10,8 @@ $erro = null;
 $login = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $login = trim($_POST['login'] ?? '');
-    $senha = $_POST['senha'] ?? '';
+    $login = is_string($_POST['login'] ?? null) ? trim($_POST['login']) : '';
+    $senha = is_string($_POST['senha'] ?? null) ? $_POST['senha'] : '';
 
     $stmt = conectar()->prepare('SELECT * FROM usuarios WHERE login = ? AND ativo = 1');
     $stmt->execute([$login]);
@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: index.php');
         exit;
     }
+    // Espera 1 segundo a cada erro: deixa lento quem tenta adivinhar senhas
+    sleep(1);
     // Mensagem genérica: não contamos se o erro foi no login ou na senha
     $erro = 'Login ou senha incorretos.';
 }

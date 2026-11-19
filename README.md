@@ -27,10 +27,11 @@ Desenvolvido por **João** como parte do **Projeto de Extensão II – Ação e 
    git clone https://github.com/Jldiass/EscolaPIBA.git
    cd EscolaPIBA
    ```
-3. Inicie o servidor (os dois `-d` deixam enviar PDFs de partitura de até 20 MB):
+3. Inicie o servidor (os dois `-d` deixam enviar PDFs de partitura de até 20 MB; o `router.php` impede que o banco e os arquivos internos sejam baixados pelo navegador):
    ```
-   php -d upload_max_filesize=20M -d post_max_size=25M -S localhost:8000
+   php -d upload_max_filesize=20M -d post_max_size=25M -S localhost:8000 router.php
    ```
+   No XAMPP (Apache), copie a pasta para `htdocs`: os arquivos `.htaccess` já fazem esse bloqueio.
 4. Abra http://localhost:8000
 
 Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com dados de demonstração.
@@ -45,6 +46,14 @@ Na primeira execução o banco `database/escola.sqlite` é criado sozinho, com d
 | `elias` | Pastor Elias, Ministro de Música: Teoria musical e Bateria | Só os alunos dele, separados por especialidade |
 
 > ⚠️ Antes de usar de verdade na escola: apague o arquivo `database/escola.sqlite` de demonstração, entre como `admin` e troque a senha em **Professores → Administradores → Editar**. As senhas dos professores também são definidas e trocadas pelo admin, em **Professores → Editar**.
+
+### Teste automático
+
+```
+php tests/teste.php
+```
+
+Sobe o sistema com um banco temporário (o banco de verdade não é tocado), entra com cada perfil, abre todas as telas e confere as regras principais e a segurança: mais de 100 verificações. O GitHub roda o mesmo teste a cada envio (aba **Actions**).
 
 ## Tecnologias
 

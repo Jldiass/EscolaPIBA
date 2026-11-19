@@ -13,7 +13,7 @@ $pdo = conectar();
 
 // Mês (AAAA-MM). Inválido ou no futuro -> mês atual.
 $mes = $_GET['mes'] ?? date('Y-m');
-if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes) || $mes > date('Y-m')) {
+if (!mesValido($mes) || $mes > date('Y-m')) {
     $mes = date('Y-m');
 }
 

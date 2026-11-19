@@ -17,7 +17,7 @@ if (!ehAdmin()) {
 $pdo = conectar();
 
 $mes = $_GET['mes'] ?? date('Y-m');
-if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes)) {
+if (!mesValido($mes)) {
     $mes = date('Y-m');
 }
 

@@ -55,7 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erros[] = 'Escolha um instrumento.';
     }
     // Menor de 18 anos precisa de responsável
-    if ($aluno['data_nascimento'] !== '') {
+    if ($aluno['data_nascimento'] !== '' && (!dataValida($aluno['data_nascimento']) || $aluno['data_nascimento'] > date('Y-m-d'))) {
+        $erros[] = 'Data de nascimento inválida.';
+    } elseif ($aluno['data_nascimento'] !== '') {
         $idade = (new DateTime($aluno['data_nascimento']))->diff(new DateTime())->y;
         if ($idade < 18 && $aluno['responsavel'] === '') {
             $erros[] = 'Aluno menor de idade: informe o responsável.';

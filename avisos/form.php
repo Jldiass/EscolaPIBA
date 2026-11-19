@@ -28,12 +28,7 @@ if ($id) {
     }
 }
 
-/** Confere se o texto é uma data AAAA-MM-DD válida. */
-function dataValida(string $d): bool
-{
-    $dt = DateTime::createFromFormat('Y-m-d', $d);
-    return $dt && $dt->format('Y-m-d') === $d;
-}
+// dataValida() fica em config/database.php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verificarCsrf();

@@ -29,7 +29,8 @@ const TAMANHO_MAX_PDF = 20 * 1024 * 1024;   // 20 MB
 /** Pasta onde os PDFs ficam guardados (criada se não existir). */
 function pastaArquivosPartituras(): string
 {
-    $dir = __DIR__ . '/../database/partituras';
+    // Fica ao lado do arquivo do banco (database/partituras/)
+    $dir = dirname(getenv('ESCOLA_DB') ?: __DIR__ . '/../database/escola.sqlite') . '/partituras';
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
